@@ -1,4 +1,9 @@
-
+# ExtremeSquare (SQUARE) — Plataforma IoT em Tempo Real
+# Copyright (C) 2026 Luiz Miguel Ribeiro da Silva
+# SPDX-License-Identifier: AGPL-3.0-or-later
+#
+# Este programa é software livre: você pode redistribuí-lo e/ou modificá-lo
+# sob os termos da Licença Pública Geral Affero GNU v3.0 (veja LICENSE).
 
 import dataclasses
 from flask import Flask, render_template, request, jsonify

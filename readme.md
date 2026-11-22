@@ -76,3 +76,12 @@ simulador_lan_http.py               Simulador standalone LAN HTTP (sem dependên
 ```bash
 python simulador_lan_http.py --pool-id <ID_DA_POOL> --token <TOKEN> --host <IP_LAN> --tipo estufa
 ```
+
+---
+
+## Licença e Autoria
+
+* **Autor:** Luiz Miguel Ribeiro da Silva (`Copyright (C) 2026 Luiz Miguel Ribeiro da Silva`)
+* **Licença:** [GNU Affero General Public License v3.0 (AGPL-3.0)](LICENSE)
+
+Uso comercial, modificação e redistribuição são permitidos, desde que preservada a atribuição de autoria original e que quaisquer alterações ou melhorias distribuídas — inclusive quando hospedadas em servidor web / serviço em rede (SaaS) — tenham seu código-fonte publicado sob a mesma licença **AGPL-3.0**.
