@@ -1,0 +1,725 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold m-0"><i class="bi bi-gear-fill text-success"></i> Configurações da Pool</h3>
+        <p class="text-muted m-0 small">Dispositivo: <strong>{{ pool.nome }}</strong> (ID: <code class="text-success">{{ pool.id }}</code>)</p>
+    </div>
+    <a href="/pool/dashboard" class="btn btn-outline-secondary px-3"><i class="bi bi-arrow-left"></i> Voltar ao Dashboard</a>
+</div>
+
+{% if request.args.get('msg') %}
+<div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-3" role="alert">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ request.args.get('msg') }}</span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="card p-3 shadow" style="min-height: 520px;">
+    <!-- Navegação por Abas -->
+    <ul class="nav nav-pills justify-content-center mb-4 gap-2" id="pool-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-geral" type="button">
+                <i class="bi bi-info-circle"></i> Identificação
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-dashboard" type="button">
+                <i class="bi bi-layout-text-window"></i> Exibição do Painel
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-automacoes" type="button" id="tab-automacoes-btn">
+                <i class="bi bi-cpu"></i> Automações & Flags
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-espmap" type="button" id="tab-espmap-btn">
+                <i class="bi bi-code-slash"></i> ESPMAP (ESP32)
+            </button>
+        </li>
+    </ul>
+
+    <form action="/pool/settings/salvar" method="POST" class="px-md-4">
+        <div class="tab-content" id="pool-tabContent">
+            
+            <!-- 1. Aba Identificação -->
+            <div class="tab-pane fade show active" id="tab-geral" role="tabpanel">
+                <h5 class="mb-4 text-light"><i class="bi bi-tag-fill text-success"></i> Dados do Dispositivo</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Nome do Dispositivo</label>
+                        <input type="text" name="nome" class="form-control bg-dark text-white border-secondary" value="{{ pool.nome }}" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Identificador Único (ID HEX)</label>
+                        <input type="text" class="form-control bg-black text-success border-secondary font-monospace" value="{{ pool.id }}" readonly>
+                        <small class="text-muted">Chave imutável gerada pelo sistema para este hardware.</small>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Aplicação / Perfil de Sensores</label>
+                        <select name="tipo" class="form-select bg-dark text-white border-secondary">
+                            <option value="estufa" {% if pool.tipo == 'estufa' %}selected{% endif %}>🌱 Estufa / Agro IoT</option>
+                            <option value="lixeira" {% if pool.tipo == 'lixeira' %}selected{% endif %}>🗑️ Lixeira Inteligente</option>
+                            <option value="reservatorio" {% if pool.tipo == 'reservatorio' %}selected{% endif %}>💧 Nível de Reservatório</option>
+                            <option value="energia" {% if pool.tipo == 'energia' %}selected{% endif %}>⚡ Medidor de Energia Elétrica</option>
+                            <option value="consumo_agua" {% if pool.tipo == 'consumo_agua' %}selected{% endif %}>🚰 Consumo de Água / Hidrômetro</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div class="form-check form-switch fs-5 text-success mt-4">
+                            <input class="form-check-input" type="checkbox" name="ativo" role="switch" id="pool-ativo" {% if pool.ativo %}checked{% endif %}>
+                            <label class="form-check-label text-white fs-6">Dispositivo Ativo no Monitoramento</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card bg-black border-info p-3 mt-4">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <h6 class="text-white fw-bold m-0"><i class="bi bi-hdd-network-fill text-info"></i> Conexão de Rede (LAN / VPN / Broker MQTT)</h6>
+                            <small class="text-muted">Gerencie Endpoint HTTP, Token <code>X-API-Key</code>, IPs LAN/VPN, testes e Broker MQTT diretamente na janela de conexão.</small>
+                        </div>
+                        <button type="button" class="btn btn-info fw-bold" onclick="abrirModalConexao('lan')">
+                            <i class="bi bi-hdd-network"></i> Gerenciar Conexão LAN / VPN &amp; MQTT
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. Aba Exibição do Painel -->
+            <div class="tab-pane fade" id="tab-dashboard" role="tabpanel">
+                <h5 class="mb-4 text-light"><i class="bi bi-display text-success"></i> Preferências do Dashboard</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Intervalo de Varredura / Atualização</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="dash-intervalo" onchange="salvarConfigDash()">
+                            <option value="500 ms" {% if config.dashboard.intervalo == "500 ms" %}selected{% endif %}>500 ms (Rápido)</option>
+                            <option value="1000 ms" {% if not config.dashboard.intervalo or config.dashboard.intervalo == "1000 ms" %}selected{% endif %}>1000 ms (Padrão)</option>
+                            <option value="2000 ms" {% if config.dashboard.intervalo == "2000 ms" %}selected{% endif %}>2000 ms (Econômico)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted">Histórico de Pontos no Gráfico</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="dash-pontos" onchange="salvarConfigDash()">
+                            <option value="30" {% if config.dashboard.pontos_grafico == "30" %}selected{% endif %}>30 leituras</option>
+                            <option value="60" {% if not config.dashboard.pontos_grafico or config.dashboard.pontos_grafico == "60" %}selected{% endif %}>60 leituras</option>
+                            <option value="120" {% if config.dashboard.pontos_grafico == "120" %}selected{% endif %}>120 leituras</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="form-check form-switch fs-5 text-success mb-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="dash-hardware" {% if config.dashboard.exibir_hardware %}checked{% endif %} onchange="salvarConfigDash()">
+                        <label class="form-check-label text-white fs-6">Exibir card de Status de Comunicação</label>
+                    </div>
+                    <div class="form-check form-switch fs-5 text-success mb-2">
+                        <input class="form-check-input" type="checkbox" role="switch" id="dash-atualizacoes" {% if config.dashboard.exibir_atualizacoes %}checked{% endif %} onchange="salvarConfigDash()">
+                        <label class="form-check-label text-white fs-6">Exibir janela de Logs e Atualizações</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Aba Automações & Flags -->
+            <div class="tab-pane fade" id="tab-automacoes" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="m-0 text-light"><i class="bi bi-cpu-fill text-success"></i> Regras de Automação & Flags</h5>
+                        <small class="text-muted">Crie regras condicionais para monitorar sensores e emitir notificações de integridade (Windows Server style).</small>
+                    </div>
+                    <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#modalAddAutomacao">
+                        <i class="bi bi-plus-lg"></i> Nova Automação
+                    </button>
+                </div>
+
+                <!-- Tabela de Automações -->
+                <div class="card bg-black border-secondary mb-4">
+                    <div class="table-responsive">
+                        <table class="table table-dark table-hover mb-0 align-middle">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Status</th>
+                                    <th>Nome da Regra</th>
+                                    <th>Condição</th>
+                                    <th>Severidade</th>
+                                    <th>Notificação</th>
+                                    <th class="text-end pe-3">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for auto in automacoes %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="form-check form-switch fs-5">
+                                            <input class="form-check-input" type="checkbox" role="switch" {% if auto.ativo %}checked{% endif %} onchange="alternarAutomacao('{{ pool.id }}', '{{ auto.id }}', this)">
+                                        </div>
+                                    </td>
+                                    <td class="fw-bold">{{ auto.nome }}</td>
+                                    <td>
+                                        <code class="text-info fs-6">{{ auto.metrica }} {{ auto.condicao }} {{ auto.limite }}</code>
+                                    </td>
+                                    <td>
+                                        {% if auto.severidade == 'critico' %}
+                                            <span class="badge bg-danger"><i class="bi bi-exclamation-octagon-fill"></i> Crítico</span>
+                                        {% elif auto.severidade == 'aviso' %}
+                                            <span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle-fill"></i> Atenção</span>
+                                        {% else %}
+                                            <span class="badge bg-info"><i class="bi bi-info-circle-fill"></i> Informativo</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">{{ auto.mensagem or 'Padrão do sistema' }}</td>
+                                    <td class="text-end pe-3">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="excluirAutomacao('{{ pool.id }}', '{{ auto.id }}')" title="Excluir regra">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="bi bi-cpu fs-4 d-block mb-1"></i>
+                                        Nenhuma automação configurada para esta pool. Clique em "Nova Automação" para começar!
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Histórico Recente de Flags Desta Pool -->
+                <div class="card bg-black border-secondary p-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="m-0 text-white"><i class="bi bi-flag-fill text-warning"></i> Histórico de Flags Disparadas</h6>
+                        {% if flags %}
+                        <button type="button" class="btn btn-sm btn-outline-danger" onclick="limparTodasFlags('{{ pool.id }}')">
+                            <i class="bi bi-trash"></i> Limpar Todas
+                        </button>
+                        {% endif %}
+                    </div>
+                    {% if flags %}
+                    <div class="list-group list-group-flush">
+                        {% for f in flags[:10] %}
+                        <div class="list-group-item bg-transparent text-white border-secondary px-0 py-2 d-flex justify-content-between align-items-center">
+                            <div>
+                                {% if f.severidade == 'critico' %}
+                                    <span class="badge bg-danger me-2"><i class="bi bi-exclamation-octagon-fill"></i> Crítico</span>
+                                {% elif f.severidade == 'aviso' %}
+                                    <span class="badge bg-warning text-dark me-2"><i class="bi bi-exclamation-triangle-fill"></i> Atenção</span>
+                                {% else %}
+                                    <span class="badge bg-info me-2"><i class="bi bi-info-circle-fill"></i> Info</span>
+                                {% endif %}
+                                <strong>{{ f.titulo }}</strong>: <span class="text-light">{{ f.mensagem }}</span>
+                                <div class="text-muted small">{{ f.criada_em }}{% if f.ocorrencias > 1 %} • {{ f.ocorrencias }} ocorrências{% endif %}</div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="excluirFlag('{{ pool.id }}', '{{ f.id }}')" title="Descartar flag">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted text-center m-0 py-3"><i class="bi bi-shield-check text-success"></i> Nenhuma flag registrada para este dispositivo.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 6. Aba ESPMAP (Gerador de Firmware ESP32) -->
+            <div class="tab-pane fade" id="tab-espmap" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="m-0 text-light"><i class="bi bi-code-slash text-info"></i> ESPMAP: Gerador de Firmware ESP32</h5>
+                        <small class="text-muted">Gera código para ESP32 em Arduino C++ (.ino) ou MicroPython (main.py) com telemetria MQTT padronizada.</small>
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- Configurações do Firmware -->
+                    <div class="col-lg-5">
+                        <!-- Seleção da Linguagem -->
+                        <div class="card bg-black border-secondary p-3 mb-3">
+                            <h6 class="text-white fw-bold mb-3"><i class="bi bi-terminal-fill text-warning"></i> Linguagem do Firmware</h6>
+                            <div class="d-flex gap-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="espmap_lang" id="lang-arduino" value="arduino" checked onchange="atualizarLinguagemEspmap()">
+                                    <label class="form-check-label text-white" for="lang-arduino">
+                                        <i class="bi bi-file-earmark-code text-info me-1"></i> Arduino C++ (.ino)
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="espmap_lang" id="lang-micropython" value="micropython" onchange="atualizarLinguagemEspmap()">
+                                    <label class="form-check-label text-white" for="lang-micropython">
+                                        <i class="bi bi-file-earmark-code text-warning me-1"></i> MicroPython (main.py)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seleção do Protocolo (LAN Direta sem Broker vs MQTT) -->
+                        <div class="card bg-black border-secondary p-3 mb-3">
+                            <h6 class="text-white fw-bold mb-3"><i class="bi bi-hdd-network text-info"></i> Modo de Comunicação (Rede Privada)</h6>
+                            <div class="d-flex flex-column gap-2 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="espmap_proto" id="proto-lan-http" value="lan_http" checked onchange="atualizarProtocoloEspmap()">
+                                    <label class="form-check-label text-white" for="proto-lan-http">
+                                        <strong>LAN Direta — HTTP POST (Sem Broker)</strong> <span class="badge bg-success ms-1">Recomendado</span>
+                                    </label>
+                                </div>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="radio" name="espmap_proto" id="proto-mqtt" value="mqtt" onchange="atualizarProtocoloEspmap()">
+                                    <label class="form-check-label text-white" for="proto-mqtt">
+                                        Broker MQTT (Tradicional)
+                                    </label>
+                                </div>
+                            </div>
+                            <div id="espmap-lan-campos" class="row g-2">
+                                <div class="col-8">
+                                    <label class="form-label text-muted small">IP / Host do Servidor SQUARE</label>
+                                    <input type="text" id="espmap-server-host" class="form-control bg-dark text-white border-secondary font-monospace" value="{{ rede_info.ip_lan_principal if rede_info else '192.168.1.100' }}">
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label text-muted small">Porta</label>
+                                    <input type="number" id="espmap-server-port" class="form-control bg-dark text-white border-secondary font-monospace" value="{{ rede_info.porta if rede_info else 5000 }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card bg-black border-secondary p-3 mb-3">
+                            <h6 class="text-white fw-bold mb-3"><i class="bi bi-wifi text-success"></i> Credenciais Wi-Fi & Transmissão</h6>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Nome da Rede Wi-Fi (SSID)</label>
+                                <input type="text" id="espmap-wifi-ssid" class="form-control bg-dark text-white border-secondary" placeholder="Ex: MinhaRedeWiFi" value="MinhaRedeWiFi">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Senha do Wi-Fi</label>
+                                <input type="password" id="espmap-wifi-pass" class="form-control bg-dark text-white border-secondary" placeholder="Ex: Senha1234" value="Senha1234">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Intervalo de Transmissão MQTT (segundos)</label>
+                                <input type="number" id="espmap-intervalo" class="form-control bg-dark text-white border-secondary" value="2" min="1" max="60">
+                            </div>
+                        </div>
+
+                        <!-- Sensores Conectados ao ESP32 -->
+                        <div class="card bg-black border-secondary p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="text-white fw-bold m-0"><i class="bi bi-diagram-3 text-info"></i> Sensores do Hardware</h6>
+                                <button type="button" class="btn btn-sm btn-outline-info" onclick="adicionarLinhaSensorEspmap()">
+                                    <i class="bi bi-plus-lg"></i> Adicionar Sensor
+                                </button>
+                            </div>
+                            <div id="espmap-sensores-lista" class="d-flex flex-column gap-2 mb-3">
+                                <!-- Linhas de sensores adicionadas dinamicamente -->
+                            </div>
+                            <button type="button" class="btn btn-info fw-bold w-100 py-2" onclick="gerarCodigoEspmap()">
+                                <i class="bi bi-gear-fill"></i> <span id="espmap-btn-gerar-texto">Gerar Firmware C++ (.ino)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Visualização e Download do Código Gerado -->
+                    <div class="col-lg-7">
+                        <div class="card bg-black border-secondary p-3 h-100 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="text-white fw-bold m-0"><i class="bi bi-file-earmark-code text-success"></i> <span id="espmap-header-preview-ext">Código Fonte Arduino (.ino)</span></h6>
+                                <div class="d-flex gap-2">
+                                    <button type="button" class="btn btn-sm btn-outline-light" onclick="copiarCodigoEspmap()">
+                                        <i class="bi bi-clipboard"></i> Copiar
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-success" onclick="baixarCodigoEspmap()">
+                                        <i class="bi bi-download"></i> <span id="espmap-btn-download-texto">Baixar .ino</span>
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="espmap-codigo-preview" class="form-control bg-dark text-info font-monospace flex-grow-1 border-secondary" style="font-size: 0.8rem; min-height: 480px; resize: vertical;" readonly placeholder="// Clique em 'Gerar Firmware' para visualizar o código pronto para compilação ou execução..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="border-top border-secondary mt-4 pt-3 text-end" id="btn-salvar-pool-container">
+            <button type="submit" class="btn btn-success px-4 py-2 fw-bold">
+                <i class="bi bi-check-lg"></i> Salvar Configurações da Pool
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Modal Nova Automação -->
+<div class="modal fade" id="modalAddAutomacao" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold"><i class="bi bi-cpu text-success"></i> Nova Regra de Automação</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/api/pool/{{ pool.id }}/automacoes/adicionar" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Nome da Regra</label>
+                        <input type="text" name="nome" class="form-control bg-black text-white border-secondary" placeholder="Ex: Alerta de Temperatura Alta" required>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-7">
+                            <label class="form-label text-muted small">Métrica do Perfil</label>
+                            <select name="metrica" class="form-select bg-black text-white border-secondary" required>
+                                {% if perfil and perfil.medidas %}
+                                    {% for m in perfil.medidas %}
+                                        <option value="{{ m.chave }}">{{ m.rotulo }} ({{ m.unidade }})</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="temperatura">Temperatura (°C)</option>
+                                    <option value="umidade">Umidade (%)</option>
+                                {% endif %}
+                            </select>
+                        </div>
+                        <div class="col-5">
+                            <label class="form-label text-muted small">Condição</label>
+                            <select name="condicao" class="form-select bg-black text-white border-secondary" required>
+                                <option value=">">Maior que (&gt;)</option>
+                                <option value="<">Menor que (&lt;)</option>
+                                <option value=">=">Maior ou Igual (&gt;=)</option>
+                                <option value="<=">Menor ou Igual (&lt;=)</option>
+                                <option value="==">Igual a (==)</option>
+                                <option value="!=">Diferente de (!=)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted small">Valor Limite</label>
+                            <input type="number" step="any" name="limite" class="form-control bg-black text-white border-secondary" placeholder="Ex: 35.0" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small">Severidade da Flag</label>
+                            <select name="severidade" class="form-select bg-black text-white border-secondary" required>
+                                <option value="aviso" selected>🟡 Atenção / Aviso</option>
+                                <option value="critico">🔴 Crítico / Alarme</option>
+                                <option value="info">🟢 Informativo</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Mensagem da Flag (Opcional)</label>
+                        <input type="text" name="mensagem" class="form-control bg-black text-white border-secondary" placeholder="Ex: Atenção! {metrica} atingiu {valor} (limite {limite})">
+                        <small class="text-muted" style="font-size: 0.75rem;">Você pode usar {valor}, {limite} e {metrica} como variáveis dinâmicas.</small>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success fw-bold"><i class="bi bi-check-lg"></i> Criar Automação</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function salvarConfigDash() {
+    const payload = {
+        dashboard: {
+            intervalo: document.getElementById('dash-intervalo').value,
+            pontos_grafico: document.getElementById('dash-pontos').value,
+            exibir_hardware: document.getElementById('dash-hardware').checked,
+            exibir_atualizacoes: document.getElementById('dash-atualizacoes').checked
+        }
+    };
+    fetch('/api/config/site', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).catch(err => console.error(err));
+}
+
+function alternarAutomacao(poolId, autoId, checkbox) {
+    fetch(`/api/pool/${poolId}/automacoes/alternar/${autoId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (!d.sucesso) {
+            checkbox.checked = !checkbox.checked;
+            alert('Não foi possível alterar o status da automação.');
+        }
+    })
+    .catch(e => {
+        checkbox.checked = !checkbox.checked;
+        alert('Erro de comunicação.');
+    });
+}
+
+function excluirAutomacao(poolId, autoId) {
+    if (!confirm('Deseja realmente excluir esta regra de automação?')) return;
+    fetch(`/api/pool/${poolId}/automacoes/excluir/${autoId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.sucesso) {
+            location.reload();
+        } else {
+            alert(d.mensagem || 'Falha ao excluir automação.');
+        }
+    })
+    .catch(e => alert('Erro de comunicação.'));
+}
+
+function excluirFlag(poolId, flagId) {
+    fetch(`/api/pool/${poolId}/flags/excluir/${flagId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.sucesso) location.reload();
+    });
+}
+
+function limparTodasFlags(poolId) {
+    if (!confirm('Deseja realmente limpar todas as flags deste dispositivo?')) return;
+    fetch(`/api/pool/${poolId}/flags/limpar_todas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.sucesso) location.reload();
+    });
+}
+
+// --- FUNÇÕES DO GERADOR ESPMAP (ESP32) ---
+let espmapSensorCount = 0;
+
+function adicionarLinhaSensorEspmap(tipo = 'dht22', chave = '', nome = '', pino = 4) {
+    espmapSensorCount++;
+    const container = document.getElementById('espmap-sensores-lista');
+    if (!container) return;
+
+    if (!chave) chave = `sensor_${espmapSensorCount}`;
+    if (!nome) nome = `Sensor ${espmapSensorCount}`;
+
+    const div = document.createElement('div');
+    div.className = 'p-2 rounded bg-dark border border-secondary espmap-sensor-item';
+    div.id = `espmap-item-${espmapSensorCount}`;
+    div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="badge bg-secondary font-monospace">#${espmapSensorCount}</span>
+            <button type="button" class="btn btn-sm btn-outline-danger py-0 px-1" onclick="this.closest('.espmap-sensor-item').remove()" title="Remover sensor">
+                <i class="bi bi-x"></i>
+            </button>
+        </div>
+        <div class="row g-2 mb-2">
+            <div class="col-7">
+                <label class="form-label text-muted small" style="font-size: 0.7rem;">Tipo do Sensor</label>
+                <select class="form-select form-select-sm bg-black text-white border-secondary espmap-tipo">
+                    <option value="dht22" ${tipo === 'dht22' ? 'selected' : ''}>DHT22 (Temp & Umid)</option>
+                    <option value="dht11" ${tipo === 'dht11' ? 'selected' : ''}>DHT11 (Temp & Umid)</option>
+                    <option value="ds18b20" ${tipo === 'ds18b20' ? 'selected' : ''}>DS18B20 (1-Wire À Prova D'água)</option>
+                    <option value="hcsr04" ${tipo === 'hcsr04' ? 'selected' : ''}>HC-SR04 / JSN-SR04T (Ultrassom)</option>
+                    <option value="analogico" ${tipo === 'analogico' ? 'selected' : ''}>ADC Analógico (Solo/LDR/Nível)</option>
+                    <option value="acs712" ${tipo === 'acs712' ? 'selected' : ''}>ACS712 (Corrente AC/DC)</option>
+                    <option value="vazao" ${tipo === 'vazao' ? 'selected' : ''}>YF-S201 (Fluxômetro Vazão)</option>
+                </select>
+            </div>
+            <div class="col-5">
+                <label class="form-label text-muted small" style="font-size: 0.7rem;">Pino GPIO</label>
+                <input type="number" class="form-control form-select-sm bg-black text-white border-secondary espmap-pino" value="${pino}" min="0" max="39">
+            </div>
+        </div>
+        <div class="row g-2">
+            <div class="col-6">
+                <label class="form-label text-muted small" style="font-size: 0.7rem;">Nome / Rótulo</label>
+                <input type="text" class="form-control form-select-sm bg-black text-white border-secondary espmap-nome" value="${nome}">
+            </div>
+            <div class="col-6">
+                <label class="form-label text-muted small" style="font-size: 0.7rem;">Chave JSON</label>
+                <input type="text" class="form-control form-select-sm bg-black text-white border-secondary espmap-chave" value="${chave}">
+            </div>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function obterSensoresEspmap() {
+    const itens = document.querySelectorAll('.espmap-sensor-item');
+    const sensores = [];
+    itens.forEach(item => {
+        const tipo = item.querySelector('.espmap-tipo').value;
+        const pino = parseInt(item.querySelector('.espmap-pino').value) || 4;
+        const nome = item.querySelector('.espmap-nome').value.trim();
+        const chave = item.querySelector('.espmap-chave').value.trim();
+        
+        const s = { tipo, chave, nome };
+        if (tipo === 'hcsr04') {
+            s.pino_trigger = pino;
+            s.pino_echo = pino === 5 ? 18 : pino + 1;
+        } else if (tipo === 'ds18b20' || tipo === 'dht22' || tipo === 'dht11') {
+            s.pino_dados = pino;
+        } else if (tipo === 'vazao') {
+            s.pino_pulso = pino;
+        } else {
+            s.pino_adc = pino;
+        }
+        sensores.push(s);
+    });
+    return sensores;
+}
+
+function atualizarLinguagemEspmap() {
+    const radios = document.getElementsByName('espmap_lang');
+    let lang = 'arduino';
+    for (const r of radios) {
+        if (r.checked) { lang = r.value; break; }
+    }
+
+    const btnGerar = document.getElementById('espmap-btn-gerar-texto');
+    const headerExt = document.getElementById('espmap-header-preview-ext');
+    const btnBaixar = document.getElementById('espmap-btn-download-texto');
+    const preview = document.getElementById('espmap-codigo-preview');
+
+    if (lang === 'micropython') {
+        if (btnGerar) btnGerar.innerText = 'Gerar Firmware MicroPython (main.py)';
+        if (headerExt) headerExt.innerText = 'Código Fonte MicroPython (main.py)';
+        if (btnBaixar) btnBaixar.innerText = 'Baixar main.py';
+        if (preview && !preview.value.includes('network')) {
+            preview.placeholder = '// Clique em "Gerar Firmware MicroPython" para visualizar o script Python pronto para ESP32...';
+        }
+    } else {
+        if (btnGerar) btnGerar.innerText = 'Gerar Firmware C++ (.ino)';
+        if (headerExt) headerExt.innerText = 'Código Fonte Arduino (.ino)';
+        if (btnBaixar) btnBaixar.innerText = 'Baixar .ino';
+        if (preview && !preview.value.includes('WiFi.h')) {
+            preview.placeholder = '// Clique em "Gerar Firmware C++" para visualizar o sketch pronto para Arduino IDE...';
+        }
+    }
+}
+
+function atualizarProtocoloEspmap() {
+    const protoEl = document.querySelector('input[name="espmap_proto"]:checked');
+    const proto = protoEl ? protoEl.value : 'lan_http';
+    const box = document.getElementById('espmap-lan-campos');
+    if (box) {
+        box.style.display = (proto === 'lan_http') ? '' : 'none';
+    }
+}
+
+function _obterParametrosEspmap() {
+    const langEl = document.querySelector('input[name="espmap_lang"]:checked');
+    const protoEl = document.querySelector('input[name="espmap_proto"]:checked');
+    return {
+        wifi_ssid: document.getElementById('espmap-wifi-ssid').value.trim(),
+        wifi_pass: document.getElementById('espmap-wifi-pass').value.trim(),
+        intervalo: parseInt(document.getElementById('espmap-intervalo').value) || 2,
+        linguagem: langEl ? langEl.value : 'arduino',
+        protocolo: protoEl ? protoEl.value : 'lan_http',
+        server_host: (document.getElementById('espmap-server-host')?.value || '').trim(),
+        server_port: parseInt(document.getElementById('espmap-server-port')?.value) || 5000,
+        sensores: obterSensoresEspmap(),
+    };
+}
+
+function gerarCodigoEspmap() {
+    const params = _obterParametrosEspmap();
+    const preview = document.getElementById('espmap-codigo-preview');
+    preview.value = `// Gerando firmware para ESP32 em ${params.linguagem.toUpperCase()} (${params.protocolo})...`;
+
+    fetch('/api/pool/{{ pool.id }}/espmap/gerar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(params)
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.sucesso) {
+            preview.value = d.codigo;
+        } else {
+            preview.value = '// Erro: ' + (d.erro || 'Falha ao gerar código.');
+        }
+    })
+    .catch(() => {
+        preview.value = '// Erro de comunicação com o servidor ao gerar o firmware.';
+    });
+}
+
+function baixarCodigoEspmap() {
+    const params = _obterParametrosEspmap();
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/api/pool/{{ pool.id }}/espmap/download';
+
+    const campos = {
+        wifi_ssid: params.wifi_ssid,
+        wifi_pass: params.wifi_pass,
+        intervalo: params.intervalo,
+        linguagem: params.linguagem,
+        protocolo: params.protocolo,
+        server_host: params.server_host,
+        server_port: params.server_port,
+        sensores_json: JSON.stringify(params.sensores),
+    };
+    Object.entries(campos).forEach(([k, v]) => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden';
+        inp.name = k;
+        inp.value = v;
+        form.appendChild(inp);
+    });
+
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
+
+function copiarCodigoEspmap() {
+    const preview = document.getElementById('espmap-codigo-preview');
+    if (!preview.value) return;
+    navigator.clipboard.writeText(preview.value).then(() => {
+        alert('Código ESP32 copiado para a área de transferência com sucesso!');
+    });
+}
+
+// Oculta o botão 'Salvar Configurações' nas abas de Automações e ESPMAP
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa visibilidade dos campos de banco
+    toggleBancoCampos();
+
+    const tabBtns = document.querySelectorAll('#pool-tabs button');
+    const btnSalvar = document.getElementById('btn-salvar-pool-container');
+    tabBtns.forEach(btn => {
+        btn.addEventListener('shown.bs.tab', (e) => {
+            const alvo = btn.getAttribute('data-bs-target');
+            if (alvo === '#tab-automacoes' || alvo === '#tab-espmap') {
+                if (btnSalvar) btnSalvar.style.display = 'none';
+            } else {
+                if (btnSalvar) btnSalvar.style.display = 'block';
+            }
+        });
+    });
+
+    // Inicializa sensores sugeridos para a aplicação atual
+    const poolTipo = "{{ pool.tipo }}";
+    if (poolTipo === 'estufa') {
+        adicionarLinhaSensorEspmap('dht22', 'temperatura_ar', 'DHT22 Ambiente', 4);
+        adicionarLinhaSensorEspmap('analogico', 'umidade_solo', 'Sensor Umidade Solo', 34);
+    } else if (poolTipo === 'reservatorio' || poolTipo === 'lixeira') {
+        adicionarLinhaSensorEspmap('hcsr04', 'nivel', 'Ultrassom HC-SR04', 5);
+    } else if (poolTipo === 'energia') {
+        adicionarLinhaSensorEspmap('acs712', 'corrente', 'ACS712 Corrente', 34);
+    } else if (poolTipo === 'consumo_agua') {
+        adicionarLinhaSensorEspmap('vazao', 'vazao', 'Sensor Pulsos YF-S201', 14);
+    } else {
+        adicionarLinhaSensorEspmap('dht22', 'sensor_1', 'Sensor Principal', 4);
+    }
+});
+</script>
+{% endblock %}

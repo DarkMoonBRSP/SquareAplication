@@ -1,0 +1,662 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold m-0"><i class="bi bi-sliders text-success"></i> Configurações do Sistema</h3>
+        <p class="text-muted m-0 small">Parâmetros globais do site, hardware e gerenciamento de acessos</p>
+    </div>
+    <a href="/pools" class="btn btn-outline-secondary px-3"><i class="bi bi-arrow-left"></i> Voltar aos Dispositivos</a>
+</div>
+
+{% if request.args.get('msg') %}
+<div class="alert alert-success alert-dismissible fade show d-flex align-items-center gap-2 mb-3" role="alert">
+    <i class="bi bi-check-circle-fill"></i>
+    <span>{{ request.args.get('msg') }}</span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if request.args.get('erro') %}
+<div class="alert alert-danger alert-dismissible fade show d-flex align-items-center gap-2 mb-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>{{ request.args.get('erro') }}</span>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<div class="card p-3 shadow" style="min-height: 520px;">
+    <!-- Navegação por Abas -->
+    <ul class="nav nav-pills justify-content-center mb-4 gap-2" id="site-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-aparencia" type="button">
+                <i class="bi bi-palette"></i> Aparência
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-comunicacao" type="button">
+                <i class="bi bi-usb-symbol"></i> Comunicação Serial
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-rede" type="button">
+                <i class="bi bi-hdd-network-fill"></i> Rede LAN &amp; VPN
+            </button>
+        </li>
+        {% if session.get('role') == 'adm' %}
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-usuarios" type="button">
+                <i class="bi bi-people-fill"></i> Gerenciador de Contas <span class="badge bg-danger ms-1">ADM</span>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link text-danger" data-bs-toggle="pill" data-bs-target="#tab-wipe" type="button">
+                <i class="bi bi-shield-slash-fill"></i> Zona de WIPE <span class="badge bg-danger ms-1">Reset</span>
+            </button>
+        </li>
+        {% endif %}
+    </ul>
+
+    <div class="tab-content px-md-4" id="site-tabContent">
+        <!-- 1. Aba Aparência -->
+        <div class="tab-pane fade show active" id="tab-aparencia" role="tabpanel">
+            <h5 class="mb-4 text-light"><i class="bi bi-palette-fill text-success"></i> Aparência da Aplicação</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Tema Visual</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="tema-visual" onchange="salvarConfigSite()">
+                        <option value="Moderno" {% if config.aparencia.tema == "Moderno" %}selected{% endif %}>Moderno (Escuro Tecnológico)</option>
+                        <option value="Industrial" {% if config.aparencia.tema == "Industrial" %}selected{% endif %}>Industrial (Alto Contraste Âmbar)</option>
+                        <option value="Claro" {% if config.aparencia.tema == "Claro" %}selected{% endif %}>Claro (Estilo Microsoft Teams)</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Escala de Zoom da Interface</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="escala" onchange="salvarConfigSite()">
+                        <option value="90%" {% if config.aparencia.escala == "90%" %}selected{% endif %}>90% (Compacto)</option>
+                        <option value="100%" {% if not config.aparencia.escala or config.aparencia.escala == "100%" %}selected{% endif %}>100% (Padrão)</option>
+                        <option value="110%" {% if config.aparencia.escala == "110%" %}selected{% endif %}>110% (Ampliado)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="form-check form-switch fs-5 text-success">
+                    <input class="form-check-input" type="checkbox" role="switch" id="animacoes" onchange="salvarConfigSite()" {% if config.aparencia.animacoes != False %}checked{% endif %}>
+                    <label class="form-check-label text-white fs-6">Ativar transições e animações visuais</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Aba Comunicação Serial USB -->
+        <div class="tab-pane fade" id="tab-comunicacao" role="tabpanel">
+            <h5 class="mb-4 text-light"><i class="bi bi-usb-plug-fill text-success"></i> Conexão Serial USB (Placas ESP32)</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Porta Serial</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="com-porta" onchange="salvarConfigSite()">
+                        <option value="Automática" {% if not config.comunicacao.porta or config.comunicacao.porta == "Automática" %}selected{% endif %}>Detecção Automática</option>
+                        {% for porta in portas_disponiveis %}
+                        <option value="{{ porta.device }}" {% if config.comunicacao.porta == porta.device %}selected{% endif %}>{{ porta.device }} - {{ porta.description }}</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">No Windows: COMx • No Linux/Ubuntu: /dev/ttyUSBx ou /dev/ttyACMx</small>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label text-muted">Velocidade (Baudrate)</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="com-velocidade" onchange="salvarConfigSite()">
+                        <option value="9600" {% if config.comunicacao.velocidade == "9600" %}selected{% endif %}>9600</option>
+                        <option value="19200" {% if config.comunicacao.velocidade == "19200" %}selected{% endif %}>19200</option>
+                        <option value="57600" {% if config.comunicacao.velocidade == "57600" %}selected{% endif %}>57600</option>
+                        <option value="115200" {% if not config.comunicacao.velocidade or config.comunicacao.velocidade == "115200" %}selected{% endif %}>115200 (Recomendado)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <div class="form-check form-switch fs-5 text-success">
+                    <input class="form-check-input" type="checkbox" role="switch" id="com-reconexao" onchange="salvarConfigSite()" {% if config.comunicacao.reconexao_automatica != False %}checked{% endif %}>
+                    <label class="form-check-label text-white fs-6">Reconexão automática se o cabo for desconectado</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Aba Rede Híbrida LAN & VPN -->
+        <div class="tab-pane fade" id="tab-rede" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                <div>
+                    <h5 class="m-0 text-light"><i class="bi bi-hdd-network-fill text-info"></i> Rede Privada Híbrida (LAN + VPN sem Broker)</h5>
+                    <small class="text-muted">Permite operar localmente na LAN (mesmo sem internet) e acessar remotamente por VPN criptografada sem abrir portas no roteador.</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-info" onclick="atualizarInfoRede()">
+                    <i class="bi bi-arrow-clockwise"></i> Atualizar IPs
+                </button>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card bg-black border-secondary p-3 h-100">
+                        <h6 class="text-white fw-bold mb-2"><i class="bi bi-wifi text-success"></i> Endereços na Rede Local (LAN)</h6>
+                        <p class="text-muted small mb-2">Abra em qualquer navegador conectado ao mesmo Wi-Fi ou cabo:</p>
+                        <div id="lista-ips-lan" class="d-flex flex-column gap-2">
+                            {% if rede_info and rede_info.interfaces_lan %}
+                                {% for iface in rede_info.interfaces_lan %}
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text bg-dark text-muted border-secondary">{{ iface.interface }}</span>
+                                    <input type="text" class="form-control bg-dark text-success border-secondary font-monospace" value="{{ iface.url }}" readonly>
+                                    <button type="button" class="btn btn-outline-success" onclick="copiarTextoSimples('{{ iface.url }}')"><i class="bi bi-clipboard"></i></button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-muted small">Nenhuma interface LAN detectada além de <code>localhost</code>.</span>
+                            {% endif %}
+                        </div>
+                        <hr class="border-secondary my-3">
+                        <label class="form-label text-muted small">Endpoint direto para placas ESP32 (sem broker):</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="site-endpoint-telemetria" class="form-control bg-dark text-info border-secondary font-monospace" value="{{ rede_info.endpoint_telemetria if rede_info else 'http://localhost:5000/api/telemetria' }}" readonly>
+                            <button type="button" class="btn btn-outline-info" onclick="copiarTextoSimples(document.getElementById('site-endpoint-telemetria').value)"><i class="bi bi-clipboard"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card bg-black border-secondary p-3 h-100">
+                        <h6 class="text-white fw-bold mb-2"><i class="bi bi-shield-lock-fill text-info"></i> Acesso Externo via VPN (Tailscale / WireGuard)</h6>
+                        <div id="lista-ips-vpn">
+                            {% if rede_info and rede_info.interfaces_vpn %}
+                                {% for iface in rede_info.interfaces_vpn %}
+                                <div class="input-group input-group-sm mb-2">
+                                    <span class="input-group-text bg-dark text-info border-secondary">{{ iface.interface }}</span>
+                                    <input type="text" class="form-control bg-dark text-info border-secondary font-monospace" value="{{ iface.url }}" readonly>
+                                    <button type="button" class="btn btn-outline-info" onclick="copiarTextoSimples('{{ iface.url }}')"><i class="bi bi-clipboard"></i></button>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-info py-2 small mb-2">
+                                    <i class="bi bi-info-circle-fill"></i> Nenhuma interface VPN ativa detectada neste servidor no momento.
+                                </div>
+                                <ol class="text-muted small ps-3 mb-0">
+                                    <li>Instale o <strong>Tailscale</strong> ou <strong>WireGuard</strong> neste servidor (com o SQUARE rodando em segundo plano).</li>
+                                    <li>Instale o mesmo app no celular ou notebook que acessará de fora.</li>
+                                    <li>Quando estiver fora da LAN, ative a VPN e acesse pelo IP privado da VPN (<code>100.x.y.z:{{ rede_info.porta if rede_info else 5000 }}</code>).</li>
+                                </ol>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-black border-secondary p-3">
+                <h6 class="text-white fw-bold mb-3"><i class="bi bi-sliders2 text-success"></i> Parâmetros do Servidor Híbrido</h6>
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small">Modo padrão para novas Pools</label>
+                        <select class="form-select bg-dark text-white border-secondary" id="rede-modo-padrao" onchange="salvarConfigSite()">
+                            <option value="lan_http" {% if not config.rede or config.rede.modo_padrao == 'lan_http' %}selected{% endif %}>LAN Direta HTTP (Sem Broker)</option>
+                            <option value="mqtt" {% if config.rede and config.rede.modo_padrao == 'mqtt' %}selected{% endif %}>Broker MQTT Tradicional</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small">Porta HTTP do Servidor</label>
+                        <input type="number" class="form-control bg-dark text-white border-secondary" id="rede-porta" value="{{ config.rede.porta if config.rede else 5000 }}" min="1024" max="65535" onchange="salvarConfigSite()">
+                        <small class="text-muted" style="font-size: 0.7rem;">Requer reiniciar o servidor para aplicar nova porta.</small>
+                    </div>
+                    <div class="col-md-5">
+                        <div class="form-check form-switch fs-5 text-success mt-3">
+                            <input class="form-check-input" type="checkbox" role="switch" id="rede-exigir-token" onchange="salvarConfigSite()" {% if not config.rede or config.rede.exigir_token_telemetria != False %}checked{% endif %}>
+                            <label class="form-check-label text-white fs-6">Exigir Token <code>X-API-Key</code> na telemetria LAN/VPN</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Aba Gerenciador de Contas (Exclusivo ADM) -->
+        {% if session.get('role') == 'adm' %}
+        <div class="tab-pane fade" id="tab-usuarios" role="tabpanel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="text-light m-0"><i class="bi bi-shield-check text-success"></i> Gerenciador de Contas Interno</h5>
+                    <small class="text-muted">Acesso restrito: controle de administradores e operadores</small>
+                </div>
+                <button class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#modalAddUsuario">
+                    <i class="bi bi-person-plus-fill"></i> Novo Usuário
+                </button>
+            </div>
+
+            <div class="card p-0 overflow-hidden border-secondary">
+                <table class="table table-dark table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th class="ps-3">Nome</th>
+                            <th>Usuário (Login)</th>
+                            <th>Nível / Perfil</th>
+                            <th>Data de Criação</th>
+                            <th class="text-end pe-3">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usr in usuarios %}
+                        <tr class="align-middle">
+                            <td class="ps-3 fw-bold">{{ usr.nome }}</td>
+                            <td><code>{{ usr.usuario }}</code></td>
+                            <td>
+                                {% if usr.role == 'adm' %}
+                                    <span class="badge bg-danger"><i class="bi bi-shield-fill"></i> Administrador</span>
+                                {% else %}
+                                    <span class="badge bg-secondary"><i class="bi bi-person"></i> Operador</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ usr.criado_em }}</td>
+                            <td class="text-end pe-3">
+                                <button class="btn btn-sm btn-outline-info" title="Alterar Senha" onclick="abrirModalSenha('{{ usr.id }}', '{{ usr.usuario }}')">
+                                    <i class="bi bi-key-fill"></i>
+                                </button>
+                                {% if usr.usuario != session.get('usuario') %}
+                                <form action="/api/usuarios/excluir/{{ usr.id }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja realmente remover o usuário {{ usr.usuario }}?');">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir"><i class="bi bi-trash"></i></button>
+                                </form>
+                                {% else %}
+                                <span class="badge bg-dark border border-secondary text-muted" title="Sua conta em uso">Você</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 4. Aba WIPE da Aplicação -->
+        <div class="tab-pane fade" id="tab-wipe" role="tabpanel">
+            <div class="alert alert-danger d-flex align-items-center gap-3 mb-4">
+                <i class="bi bi-exclamation-octagon-fill fs-1 text-danger"></i>
+                <div>
+                    <h5 class="alert-heading fw-bold m-0 text-danger">ZONA DE ALTO RISCO: RESET DE FÁBRICA (WIPE)</h5>
+                    <p class="m-0 small text-white">Esta ação apaga <strong>todos</strong> os bancos de dados SQLite isolados, regras de automação, histórico de flags, dispositivos, usuários e a <strong>própria senha de WIPE anterior</strong>. A aplicação voltará para a tela inicial de primeiro acesso.</p>
+                </div>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <!-- Gerenciar / Criar Senha Exclusiva de WIPE -->
+                <div class="col-md-6" id="card-gerenciar-wipe">
+                    {% if not wipe_registrada %}
+                    <!-- Formulário para Criar Senha Inicial de WIPE -->
+                    <div class="card bg-black border-warning p-3 h-100 shadow">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge bg-warning text-dark"><i class="bi bi-shield-lock-fill"></i> CRIAÇÃO OBRIGATÓRIA</span>
+                            <h6 class="text-white fw-bold mb-0">Criar Senha Exclusiva de WIPE</h6>
+                        </div>
+                        <p class="text-muted small">Para proteger a integridade do sistema, é obrigatório cadastrar uma <strong>Senha Exclusiva de WIPE</strong> antes de liberar qualquer operação de destruição de dados.</p>
+                        
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Nova Senha Exclusiva de WIPE</label>
+                            <input type="password" id="input-nova-senha-wipe" class="form-control bg-dark text-white border-warning" placeholder="Mínimo de 6 caracteres">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small">Confirmar Nova Senha</label>
+                            <input type="password" id="input-conf-senha-wipe" class="form-control bg-dark text-white border-warning" placeholder="Repita a nova senha">
+                            <small class="text-muted d-block mt-1"><i class="bi bi-info-circle text-warning"></i> Guarde esta senha em local seguro. Ela será exigida para autorizar o WIPE.</small>
+                        </div>
+                        <button type="button" class="btn btn-warning fw-bold w-100 mt-auto" onclick="salvarSenhaWipe(false)">
+                            <i class="bi bi-key-fill"></i> Criar Senha de WIPE
+                        </button>
+                        <div id="msg-senha-wipe" class="mt-2 text-center small"></div>
+                    </div>
+                    {% else %}
+                    <!-- Senha já Registrada com Opção de Alteração -->
+                    <div class="card bg-black border-secondary p-3 h-100 shadow">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-white fw-bold mb-0"><i class="bi bi-shield-check text-success me-1"></i> Senha Exclusiva de WIPE</h6>
+                            <span class="badge bg-success bg-opacity-25 text-success border border-success"><i class="bi bi-check-circle-fill"></i> Ativa e Protegida</span>
+                        </div>
+                        <p class="text-muted small mb-3">A senha exclusiva de WIPE já está registrada no sistema. Ela será necessária caso deseje restaurar a aplicação para o estado de fábrica.</p>
+                        
+                        <div class="p-2 rounded bg-dark border border-secondary mb-3 small text-muted">
+                            <i class="bi bi-lock-fill text-warning me-1"></i> A chave está gravada com hash seguro e pronta para autorizar o procedimento.
+                        </div>
+
+                        <button type="button" class="btn btn-outline-warning btn-sm w-100" id="btn-toggle-alterar-wipe" onclick="toggleAlterarSenhaWipe()">
+                            <i class="bi bi-pencil-square"></i> Alterar / Redefinir Senha de WIPE
+                        </button>
+
+                        <!-- Formulário Ocultável de Alteração de Senha -->
+                        <div id="form-alterar-senha-wipe" class="d-none mt-3 p-3 bg-dark rounded border border-warning">
+                            <h6 class="text-warning small fw-bold mb-2"><i class="bi bi-arrow-repeat"></i> Alteração de Senha de WIPE</h6>
+                            <div class="mb-2">
+                                <label class="form-label text-muted small">Senha Atual de WIPE</label>
+                                <input type="password" id="input-atual-senha-wipe" class="form-control bg-black text-white border-secondary form-control-sm" placeholder="Digite a senha atual">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label text-muted small">Nova Senha (mín. 6 caracteres)</label>
+                                <input type="password" id="input-nova-senha-wipe" class="form-control bg-black text-white border-secondary form-control-sm" placeholder="Nova senha">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Confirmar Nova Senha</label>
+                                <input type="password" id="input-conf-senha-wipe" class="form-control bg-black text-white border-secondary form-control-sm" placeholder="Repita a nova senha">
+                            </div>
+                            <button type="button" class="btn btn-warning btn-sm fw-bold w-100" onclick="salvarSenhaWipe(true)">
+                                <i class="bi bi-check-lg"></i> Confirmar Nova Senha
+                            </button>
+                            <div id="msg-senha-wipe" class="mt-2 text-center small"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Executar WIPE (Painel de Restauração) -->
+                <div class="col-md-6">
+                    <div class="card bg-black border-danger p-3 h-100 shadow">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="text-danger fw-bold mb-0"><i class="bi bi-trash3-fill text-danger"></i> Painel de Restauração de Fábrica</h6>
+                            {% if wipe_registrada %}
+                            <span class="badge bg-danger bg-opacity-25 text-danger border border-danger"><i class="bi bi-shield-shaded"></i> Protegido</span>
+                            {% else %}
+                            <span class="badge bg-secondary"><i class="bi bi-slash-circle"></i> Bloqueado</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-muted small">Executa o procedimento destrutivo total, limpando todas as informações salvas no servidor local.</p>
+                        
+                        <div class="p-3 bg-dark rounded border border-danger-subtle mb-3">
+                            <ul class="text-muted small mb-0 ps-3">
+                                <li>Exclui todos os bancos de dados das pools (<code>dados/pools/*.db</code>)</li>
+                                <li>Exclui histórico de flags e telemetrias dos dispositivos</li>
+                                <li>Remove todas as contas de usuário cadastradas</li>
+                                <li class="text-danger fw-bold">Apaga por completo a senha anterior de WIPE</li>
+                                <li>Redireciona para o Setup de primeiro acesso (<code>/setup</code>)</li>
+                            </ul>
+                        </div>
+
+                        {% if wipe_registrada %}
+                        <button type="button" class="btn btn-danger fw-bold w-100 py-2 mt-auto" data-bs-toggle="modal" data-bs-target="#modalConfirmarWipe">
+                            <i class="bi bi-fire"></i> Iniciar Processo de WIPE
+                        </button>
+                        {% else %}
+                        <button type="button" class="btn btn-outline-secondary fw-bold w-100 py-2 mt-auto" disabled title="Crie primeiro a senha de WIPE no card ao lado">
+                            <i class="bi bi-lock-fill"></i> Crie a Senha de WIPE Primeiro
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Novo Usuário -->
+<div class="modal fade" id="modalAddUsuario" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="bi bi-person-plus text-success"></i> Adicionar Usuário</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/api/usuarios/criar" method="POST">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Nome Completo</label>
+                        <input type="text" name="nome" class="form-control bg-black text-white border-secondary" placeholder="Ex: Operador Manhã" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Usuário de Login</label>
+                        <input type="text" name="usuario" class="form-control bg-black text-white border-secondary" placeholder="Ex: operador1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Senha Inicial</label>
+                        <input type="password" name="senha" class="form-control bg-black text-white border-secondary" required minlength="4">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Perfil de Acesso</label>
+                        <select name="role" class="form-select bg-black text-white border-secondary">
+                            <option value="operador" selected>Operador (Visualização e operação de pools)</option>
+                            <option value="adm">Administrador (Controle total do sistema e contas)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Criar Usuário</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Alterar Senha -->
+<div class="modal fade" id="modalSenhaUsuario" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title"><i class="bi bi-key text-info"></i> Alterar Senha de <span id="span-usuario-senha"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form action="/api/usuarios/alterar-senha" method="POST">
+                <input type="hidden" name="usuario_id" id="input-usuario-id-senha">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted">Nova Senha</label>
+                        <input type="password" name="nova_senha" class="form-control bg-black text-white border-secondary" required minlength="4">
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-info"><i class="bi bi-check-lg"></i> Salvar Senha</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Confirmar WIPE -->
+<div class="modal fade" id="modalConfirmarWipe" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-danger shadow-lg">
+            <div class="modal-header border-danger bg-danger bg-opacity-25">
+                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle-fill"></i> CONFIRMAR RESTAURAÇÃO DE FÁBRICA</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-white">Para autorizar a destruição dos bancos de dados, flags, contas e da <strong>própria senha anterior de WIPE</strong>, digite a <strong>Senha Exclusiva de WIPE</strong> e digite <span class="badge bg-danger">CONFIRMAR</span> no campo abaixo:</p>
+                
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Senha Exclusiva de WIPE</label>
+                    <input type="password" id="input-exec-senha-wipe" class="form-control bg-black text-white border-danger" placeholder="Digite sua senha exclusiva" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small">Palavra de Confirmação (Digite exatamente: CONFIRMAR)</label>
+                    <input type="text" id="input-exec-palavra" class="form-control bg-black text-white border-danger" placeholder="CONFIRMAR" required>
+                </div>
+
+                <div class="alert alert-danger py-2 small mb-0">
+                    <i class="bi bi-info-circle-fill me-1"></i> A senha anterior de WIPE será <strong>completamente apagada</strong> junto com todas as credenciais e dados.
+                </div>
+
+                <div id="msg-exec-wipe" class="alert alert-danger py-2 small d-none mt-2"></div>
+            </div>
+            <div class="modal-footer border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger fw-bold" onclick="executarWipe()">
+                    <i class="bi bi-fire"></i> Apagar Tudo e Restaurar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function abrirModalSenha(id, usuario) {
+    document.getElementById('input-usuario-id-senha').value = id;
+    document.getElementById('span-usuario-senha').innerText = usuario;
+    new bootstrap.Modal(document.getElementById('modalSenhaUsuario')).show();
+}
+
+function toggleAlterarSenhaWipe() {
+    const f = document.getElementById('form-alterar-senha-wipe');
+    if (f) {
+        f.classList.toggle('d-none');
+    }
+}
+
+function salvarSenhaWipe(isAlteracao) {
+    const inputNova = document.getElementById('input-nova-senha-wipe');
+    const inputConf = document.getElementById('input-conf-senha-wipe');
+    const msg = document.getElementById('msg-senha-wipe');
+    
+    const novaSenha = inputNova ? inputNova.value.trim() : '';
+    const confSenha = inputConf ? inputConf.value.trim() : '';
+    let senhaAtual = '';
+
+    if (isAlteracao) {
+        const inputAtual = document.getElementById('input-atual-senha-wipe');
+        senhaAtual = inputAtual ? inputAtual.value.trim() : '';
+        if (!senhaAtual) {
+            msg.innerHTML = '<span class="text-danger">Digite a senha atual de WIPE.</span>';
+            return;
+        }
+    }
+
+    if (!novaSenha || novaSenha.length < 6) {
+        msg.innerHTML = '<span class="text-danger">A nova senha deve ter no mínimo 6 caracteres.</span>';
+        return;
+    }
+
+    if (novaSenha !== confSenha) {
+        msg.innerHTML = '<span class="text-danger">A confirmação da nova senha não confere.</span>';
+        return;
+    }
+
+    msg.innerHTML = '<span class="text-warning"><i class="bi bi-hourglass-split"></i> Gravando senha...</span>';
+
+    fetch('/api/sistema/wipe/definir-senha', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nova_senha: novaSenha, senha_atual: senhaAtual })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.sucesso) {
+            msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Senha salva com sucesso! Recarregando...</span>';
+            setTimeout(() => { window.location.reload(); }, 1000);
+        } else {
+            msg.innerHTML = `<span class="text-danger">${d.erro || 'Falha ao salvar senha.'}</span>`;
+        }
+    })
+    .catch(err => {
+        msg.innerHTML = '<span class="text-danger">Erro de comunicação com o servidor.</span>';
+    });
+}
+
+function executarWipe() {
+    const senha = document.getElementById('input-exec-senha-wipe').value.trim();
+    const palavra = document.getElementById('input-exec-palavra').value.trim();
+    const msg = document.getElementById('msg-exec-wipe');
+
+    if (!senha) {
+        msg.innerText = 'Digite a senha exclusiva de WIPE.';
+        msg.classList.remove('d-none');
+        return;
+    }
+
+    if (palavra !== 'CONFIRMAR') {
+        msg.innerText = 'A palavra de confirmação deve ser exatamente CONFIRMAR.';
+        msg.classList.remove('d-none');
+        return;
+    }
+
+    msg.innerText = 'Executando WIPE e redefinindo aplicação...';
+    msg.className = 'alert alert-warning py-2 small';
+    msg.classList.remove('d-none');
+
+    fetch('/api/sistema/wipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ senha_wipe: senha })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.sucesso) {
+            msg.className = 'alert alert-success py-2 small';
+            msg.innerText = d.mensagem + ' Redirecionando para o Setup inicial...';
+            setTimeout(() => {
+                window.location.href = '/setup';
+            }, 1800);
+        } else {
+            msg.className = 'alert alert-danger py-2 small';
+            msg.innerText = d.erro || 'Falha ao executar WIPE.';
+        }
+    })
+    .catch(err => {
+        msg.className = 'alert alert-danger py-2 small';
+        msg.innerText = 'Falha de comunicação com o servidor.';
+    });
+}
+
+function copiarTextoSimples(texto) {
+    if (!texto) return;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(texto);
+    }
+}
+
+function atualizarInfoRede() {
+    fetch('/api/rede/info')
+        .then(r => r.json())
+        .then(d => {
+            if (!d.sucesso || !d.rede) return;
+            const ep = document.getElementById('site-endpoint-telemetria');
+            if (ep) ep.value = d.rede.endpoint_telemetria;
+            const lanDiv = document.getElementById('lista-ips-lan');
+            if (lanDiv && d.rede.interfaces_lan) {
+                lanDiv.innerHTML = d.rede.interfaces_lan.map(i => `
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-dark text-muted border-secondary">${i.interface}</span>
+                        <input type="text" class="form-control bg-dark text-success border-secondary font-monospace" value="${i.url}" readonly>
+                        <button type="button" class="btn btn-outline-success" onclick="copiarTextoSimples('${i.url}')"><i class="bi bi-clipboard"></i></button>
+                    </div>`).join('');
+            }
+            const vpnDiv = document.getElementById('lista-ips-vpn');
+            if (vpnDiv && d.rede.interfaces_vpn && d.rede.interfaces_vpn.length > 0) {
+                vpnDiv.innerHTML = d.rede.interfaces_vpn.map(i => `
+                    <div class="input-group input-group-sm mb-2">
+                        <span class="input-group-text bg-dark text-info border-secondary">${i.interface}</span>
+                        <input type="text" class="form-control bg-dark text-info border-secondary font-monospace" value="${i.url}" readonly>
+                        <button type="button" class="btn btn-outline-info" onclick="copiarTextoSimples('${i.url}')"><i class="bi bi-clipboard"></i></button>
+                    </div>`).join('');
+            }
+        });
+}
+
+function salvarConfigSite() {
+    const payload = {
+        aparencia: {
+            tema: document.getElementById('tema-visual').value,
+            escala: document.getElementById('escala').value,
+            animacoes: document.getElementById('animacoes').checked
+        },
+        comunicacao: {
+            porta: document.getElementById('com-porta').value,
+            velocidade: document.getElementById('com-velocidade').value,
+            reconexao_automatica: document.getElementById('com-reconexao').checked
+        },
+        rede: {
+            modo_padrao: document.getElementById('rede-modo-padrao').value,
+            porta: parseInt(document.getElementById('rede-porta').value) || 5000,
+            exigir_token_telemetria: document.getElementById('rede-exigir-token').checked
+        }
+    };
+
+    fetch('/api/config/site', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).then(res => res.json()).then(data => {
+        if (data.status === 'ok') {
+            console.log('Configurações globais do site salvas.');
+        }
+    }).catch(err => console.error(err));
+}
+</script>
+{% endblock %}

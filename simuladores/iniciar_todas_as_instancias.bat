@@ -1,0 +1,2 @@
+python simulador_todas_instancias.py
+pause

@@ -1,0 +1,1143 @@
+/* ==========================================================================
+   FOLHA DE ESTILOS GERAL & SISTEMA DE TEMAS - EXTREMESQUARE
+   Temas Disponíveis:
+     1. Moderno (Escuro Tecnológico)
+     2. Industrial (Alto Contraste Âmbar / SCADA / HMI)
+     3. Claro (Estilo Microsoft Teams / Fluent UI)
+   ========================================================================== */
+
+body {
+    background-color: #f8f9fa;
+    color: #212529;
+    min-height: 100vh;
+}
+
+/* ==========================================================================
+   1. TEMA MODERNO (ESCURO TECNOLÓGICO)
+   Paleta: Grafite Profundo (#0b0f17), Superfícies (#151b28), Emerald (#10b981)
+           e Cyber Sky (#38bdf8).
+   ========================================================================== */
+body.theme-moderno {
+    background-color: #0b0f17 !important;
+    color: #e6edf3 !important;
+}
+
+/* Scrollbars Moderno */
+body.theme-moderno ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+body.theme-moderno ::-webkit-scrollbar-track {
+    background: #0b0f17;
+}
+body.theme-moderno ::-webkit-scrollbar-thumb {
+    background: #30363d;
+    border-radius: 4px;
+}
+body.theme-moderno ::-webkit-scrollbar-thumb:hover {
+    background: #10b981;
+}
+
+/* Navbar Moderno */
+body.theme-moderno .navbar {
+    background-color: #111622 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+}
+body.theme-moderno .navbar-brand {
+    color: #f0f6fc !important;
+}
+body.theme-moderno .navbar .border-secondary {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Tipografia & Headings Moderno */
+body.theme-moderno h1, 
+body.theme-moderno h2, 
+body.theme-moderno h3, 
+body.theme-moderno h4, 
+body.theme-moderno h5, 
+body.theme-moderno h6 {
+    color: #f0f6fc;
+}
+body.theme-moderno .text-success {
+    color: #00e676 !important;
+}
+body.theme-moderno .text-info {
+    color: #38bdf8 !important;
+}
+body.theme-moderno .text-primary {
+    color: #58a6ff !important;
+}
+body.theme-moderno .text-warning {
+    color: #facc15 !important;
+}
+body.theme-moderno .text-muted {
+    color: #8b949e !important;
+}
+body.theme-moderno .text-white,
+body.theme-moderno .text-light {
+    color: #f0f6fc !important;
+}
+
+/* Cards & Painéis Moderno */
+body.theme-moderno .card {
+    background-color: #151b28 !important;
+    color: #e6edf3;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+}
+body.theme-moderno .card-header {
+    background-color: #0f1420 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #f0f6fc !important;
+    font-weight: 600;
+}
+
+/* Containers Internos Moderno */
+body.theme-moderno .bg-black,
+body.theme-moderno .bg-dark {
+    background-color: #0d121c !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+body.theme-moderno .border-secondary,
+body.theme-moderno .border-secondary-subtle {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+body.theme-moderno .border-success {
+    border-color: #10b981 !important;
+}
+body.theme-moderno .border-info {
+    border-color: #38bdf8 !important;
+}
+
+/* Botões Moderno */
+body.theme-moderno .btn-success,
+body.theme-moderno .btn-primary {
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%) !important;
+    border-color: #34d399 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+body.theme-moderno .btn-success:hover,
+body.theme-moderno .btn-primary:hover {
+    background: linear-gradient(180deg, #34d399 0%, #10b981 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.5) !important;
+}
+body.theme-moderno .btn-outline-success,
+body.theme-moderno .btn-outline-primary {
+    color: #10b981 !important;
+    border-color: #10b981 !important;
+    background-color: transparent !important;
+}
+body.theme-moderno .btn-outline-success:hover,
+body.theme-moderno .btn-outline-primary:hover {
+    background-color: #10b981 !important;
+    color: #ffffff !important;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4) !important;
+}
+body.theme-moderno .btn-secondary {
+    background-color: #21262d !important;
+    border-color: #30363d !important;
+    color: #c9d1d9 !important;
+}
+body.theme-moderno .btn-secondary:hover {
+    background-color: #30363d !important;
+    border-color: #8b949e !important;
+    color: #ffffff !important;
+}
+body.theme-moderno .btn-outline-secondary {
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+    background-color: transparent !important;
+}
+body.theme-moderno .btn-outline-secondary:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+    border-color: #8b949e !important;
+}
+body.theme-moderno .btn-outline-info {
+    color: #38bdf8 !important;
+    border-color: #38bdf8 !important;
+}
+body.theme-moderno .btn-outline-info:hover {
+    background-color: #38bdf8 !important;
+    color: #0b0f17 !important;
+}
+
+/* Badges Moderno */
+body.theme-moderno .badge.bg-success {
+    background-color: rgba(16, 185, 129, 0.2) !important;
+    color: #34d399 !important;
+    border: 1px solid rgba(16, 185, 129, 0.4) !important;
+    font-weight: 600;
+}
+body.theme-moderno .badge.bg-info {
+    background-color: rgba(56, 189, 248, 0.2) !important;
+    color: #38bdf8 !important;
+    border: 1px solid rgba(56, 189, 248, 0.4) !important;
+    font-weight: 600;
+}
+body.theme-moderno .badge.bg-secondary {
+    background-color: #21262d !important;
+    color: #8b949e !important;
+    border: 1px solid #30363d !important;
+}
+body.theme-moderno .badge.bg-dark {
+    background-color: #0d121c !important;
+    color: #38bdf8 !important;
+    border: 1px solid #30363d !important;
+}
+body.theme-moderno .badge.bg-warning {
+    background-color: rgba(245, 158, 11, 0.2) !important;
+    color: #fbbf24 !important;
+    border: 1px solid rgba(245, 158, 11, 0.4) !important;
+}
+body.theme-moderno .badge.bg-danger {
+    background-color: rgba(239, 68, 68, 0.2) !important;
+    color: #f87171 !important;
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
+}
+
+/* Indicador de Nível & Progress Bar Moderno */
+body.theme-moderno .progress {
+    background-color: #0d121c !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+body.theme-moderno .progress-bar,
+body.theme-moderno #indicador-barra {
+    background: linear-gradient(90deg, #0284c7, #06b6d4, #10b981) !important;
+    color: #ffffff !important;
+    font-weight: bold;
+}
+body.theme-moderno #grafico-sensor {
+    background: #10b981 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    border: none !important;
+}
+body.theme-moderno #grafico-sensor option {
+    background-color: #151b28 !important;
+    color: #f0f6fc !important;
+}
+
+/* Terminal & Logs Moderno */
+body.theme-moderno .log-container {
+    background-color: #070a0f !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #00ff88 !important;
+    font-family: 'Consolas', 'Courier New', monospace;
+}
+body.theme-moderno #lista-logs {
+    color: #00ff88 !important;
+    text-shadow: 0 0 2px rgba(0, 255, 136, 0.3);
+}
+body.theme-moderno #lista-logs li {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 2px 0;
+}
+
+/* Modais Moderno */
+body.theme-moderno .modal-content {
+    background-color: #151b28 !important;
+    color: #e6edf3 !important;
+    border: 1px solid #30363d !important;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7) !important;
+}
+body.theme-moderno .modal-header {
+    background-color: #0f1420 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    color: #f0f6fc !important;
+}
+body.theme-moderno .modal-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background-color: #0f1420 !important;
+}
+body.theme-moderno #mqtt-modal-ultimo-payload,
+body.theme-moderno #lan-modal-ultimo-payload {
+    color: #00ff88 !important;
+    background-color: #070a0f !important;
+    border-color: #30363d !important;
+}
+
+/* Formulários Moderno */
+body.theme-moderno .form-control,
+body.theme-moderno .form-select {
+    background-color: #0d121c !important;
+    border: 1px solid #30363d !important;
+    color: #f0f6fc !important;
+}
+body.theme-moderno .form-control:focus,
+body.theme-moderno .form-select:focus {
+    border-color: #10b981 !important;
+    box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25) !important;
+    color: #ffffff !important;
+}
+body.theme-moderno .form-select option {
+    background-color: #151b28 !important;
+    color: #f0f6fc !important;
+}
+body.theme-moderno .form-check-input:checked {
+    background-color: #10b981 !important;
+    border-color: #34d399 !important;
+}
+
+/* Abas (Nav Pills) Moderno */
+body.theme-moderno .nav-pills .nav-link {
+    color: #8b949e !important;
+    border: 1px solid transparent;
+}
+body.theme-moderno .nav-pills .nav-link:hover {
+    color: #f0f6fc !important;
+    background: rgba(255, 255, 255, 0.05);
+}
+body.theme-moderno .nav-pills .nav-link.active {
+    background: linear-gradient(180deg, #10b981 0%, #059669 100%) !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border: 1px solid #34d399 !important;
+    box-shadow: 0 2px 10px rgba(16, 185, 129, 0.35);
+}
+
+/* Tabelas Moderno */
+body.theme-moderno .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #f0f6fc;
+    --bs-table-border-color: rgba(255, 255, 255, 0.08);
+}
+body.theme-moderno .table th {
+    background-color: #0f1420 !important;
+    color: #f0f6fc !important;
+    border-bottom: 2px solid #10b981 !important;
+    font-weight: 600;
+}
+body.theme-moderno .table td {
+    border-color: rgba(255, 255, 255, 0.06) !important;
+}
+body.theme-moderno .table-hover > tbody > tr:hover > * {
+    --bs-table-hover-bg: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* Utilitários Moderno */
+body.theme-moderno .input-group-text {
+    background-color: #0d121c !important;
+    border-color: #30363d !important;
+    color: #8b949e !important;
+}
+body.theme-moderno code {
+    color: #38bdf8 !important;
+    background-color: #0d121c !important;
+    border: 1px solid #30363d !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+body.theme-moderno hr {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+body.theme-moderno .dropdown-menu {
+    background-color: #151b28 !important;
+    border: 1px solid #30363d !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+body.theme-moderno .dropdown-item {
+    color: #f0f6fc !important;
+}
+body.theme-moderno .dropdown-item:hover {
+    background-color: rgba(255, 255, 255, 0.08) !important;
+    color: #00e676 !important;
+}
+body.theme-moderno .alert-success {
+    background-color: rgba(16, 185, 129, 0.15) !important;
+    border: 1px solid #10b981 !important;
+    color: #6ee7b7 !important;
+}
+body.theme-moderno .alert-danger {
+    background-color: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid #ef4444 !important;
+    color: #fca5a5 !important;
+}
+body.theme-moderno .alert-warning {
+    background-color: rgba(245, 158, 11, 0.15) !important;
+    border: 1px solid #f59e0b !important;
+    color: #fde68a !important;
+}
+
+
+/* ==========================================================================
+   2. TEMA INDUSTRIAL (ALTO CONTRASTE - PRETO, ÂMBAR E LARANJA SCADA / HMI)
+   Paleta: Preto Fosco (#0a0b0e), Grafite Industrial (#14161d), Âmbar (#ff9800)
+           e Laranja (#f57c00).
+   ========================================================================== */
+body.theme-industrial {
+    background-color: #0a0b0e !important;
+    color: #f5ede0 !important;
+}
+
+/* Scrollbars Industriais */
+body.theme-industrial ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+body.theme-industrial ::-webkit-scrollbar-track {
+    background: #0e1015;
+}
+body.theme-industrial ::-webkit-scrollbar-thumb {
+    background: #ff9800;
+    border-radius: 4px;
+}
+body.theme-industrial ::-webkit-scrollbar-thumb:hover {
+    background: #ffb300;
+}
+
+/* Navbar Industrial */
+body.theme-industrial .navbar {
+    background-color: #111318 !important;
+    border-bottom: 2px solid #ff9800 !important;
+    box-shadow: 0 4px 15px rgba(255, 152, 0, 0.15) !important;
+}
+body.theme-industrial .navbar-brand {
+    color: #ffaa00 !important;
+    letter-spacing: 0.5px;
+}
+body.theme-industrial .navbar .border-secondary {
+    border-color: rgba(255, 152, 0, 0.3) !important;
+}
+
+/* Tipografia e Títulos */
+body.theme-industrial h1, 
+body.theme-industrial h2, 
+body.theme-industrial h3, 
+body.theme-industrial h4, 
+body.theme-industrial h5, 
+body.theme-industrial h6 {
+    color: #ffaa00;
+}
+body.theme-industrial .text-success {
+    color: #ffaa00 !important;
+}
+body.theme-industrial .text-info {
+    color: #ffb74d !important;
+}
+body.theme-industrial .text-primary {
+    color: #ffa726 !important;
+}
+body.theme-industrial .text-warning {
+    color: #ff7043 !important;
+}
+body.theme-industrial .text-muted {
+    color: #a89a86 !important;
+}
+body.theme-industrial .text-white,
+body.theme-industrial .text-light {
+    color: #f5ede0 !important;
+}
+
+/* Cards & Painéis Industriais */
+body.theme-industrial .card {
+    background-color: #14161d !important;
+    color: #f5ede0;
+    border: 1px solid rgba(255, 152, 0, 0.35) !important;
+    border-radius: 6px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6) !important;
+}
+body.theme-industrial .card-header {
+    background-color: #0f1015 !important;
+    border-bottom: 1px solid rgba(255, 152, 0, 0.3) !important;
+    color: #ffaa00 !important;
+}
+
+/* Caixas Internas (Containers de Status e Diagnóstico) */
+body.theme-industrial .bg-black,
+body.theme-industrial .bg-dark {
+    background-color: #0c0d12 !important;
+    border-color: rgba(255, 152, 0, 0.25) !important;
+}
+body.theme-industrial .border-secondary,
+body.theme-industrial .border-secondary-subtle {
+    border-color: rgba(255, 152, 0, 0.25) !important;
+}
+body.theme-industrial .border-success {
+    border-color: #ff9800 !important;
+}
+body.theme-industrial .border-info {
+    border-color: #ffb74d !important;
+}
+
+/* Botões Industriais */
+body.theme-industrial .btn-success,
+body.theme-industrial .btn-primary {
+    background: linear-gradient(180deg, #ffa000 0%, #e65100 100%) !important;
+    border-color: #ffb300 !important;
+    color: #0a0b0e !important;
+    font-weight: 700 !important;
+    box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3);
+}
+body.theme-industrial .btn-success:hover,
+body.theme-industrial .btn-primary:hover {
+    background: linear-gradient(180deg, #ffb300 0%, #f57c00 100%) !important;
+    color: #000000 !important;
+    box-shadow: 0 0 12px rgba(255, 160, 0, 0.6) !important;
+}
+body.theme-industrial .btn-outline-success,
+body.theme-industrial .btn-outline-primary {
+    color: #ffaa00 !important;
+    border-color: #ff9800 !important;
+    background-color: transparent !important;
+}
+body.theme-industrial .btn-outline-success:hover,
+body.theme-industrial .btn-outline-primary:hover {
+    background-color: #ff9800 !important;
+    color: #0a0b0e !important;
+    font-weight: 700 !important;
+    box-shadow: 0 0 10px rgba(255, 152, 0, 0.4) !important;
+}
+body.theme-industrial .btn-secondary {
+    background-color: #1e2029 !important;
+    border-color: rgba(255, 152, 0, 0.35) !important;
+    color: #ffb300 !important;
+}
+body.theme-industrial .btn-secondary:hover {
+    background-color: #282a36 !important;
+    border-color: #ff9800 !important;
+    color: #ffd54f !important;
+}
+body.theme-industrial .btn-outline-secondary {
+    color: #d1c4b2 !important;
+    border-color: rgba(255, 152, 0, 0.35) !important;
+    background-color: transparent !important;
+}
+body.theme-industrial .btn-outline-secondary:hover {
+    background-color: rgba(255, 152, 0, 0.15) !important;
+    color: #ffaa00 !important;
+    border-color: #ff9800 !important;
+}
+body.theme-industrial .btn-outline-info {
+    color: #ffb74d !important;
+    border-color: #ffb74d !important;
+}
+body.theme-industrial .btn-outline-info:hover {
+    background-color: #ffb74d !important;
+    color: #0a0b0e !important;
+}
+body.theme-industrial .btn-outline-warning {
+    color: #ff9800 !important;
+    border-color: #ff9800 !important;
+}
+body.theme-industrial .btn-outline-warning:hover {
+    background-color: #ff9800 !important;
+    color: #000000 !important;
+}
+
+/* Badges Industriais */
+body.theme-industrial .badge.bg-success {
+    background-color: #ff9800 !important;
+    color: #0a0b0e !important;
+    font-weight: 700 !important;
+    border: 1px solid #ffb300;
+}
+body.theme-industrial .badge.bg-info {
+    background-color: #ffa726 !important;
+    color: #0a0b0e !important;
+    font-weight: 700 !important;
+}
+body.theme-industrial .badge.bg-secondary {
+    background-color: #1a1c24 !important;
+    color: #c4b5a0 !important;
+    border: 1px solid rgba(255, 152, 0, 0.25);
+}
+body.theme-industrial .badge.bg-dark {
+    background-color: #0e0f14 !important;
+    color: #ffaa00 !important;
+    border: 1px solid rgba(255, 152, 0, 0.35);
+}
+body.theme-industrial .badge.bg-warning {
+    background-color: #f57c00 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+body.theme-industrial .badge.bg-danger {
+    background-color: #c62828 !important;
+    color: #ffffff !important;
+    border: 1px solid #ef5350;
+}
+
+/* Indicador de Nível e Barra de Progresso */
+body.theme-industrial .progress {
+    background-color: #0c0d12 !important;
+    border: 1px solid rgba(255, 152, 0, 0.4) !important;
+}
+body.theme-industrial .progress-bar,
+body.theme-industrial #indicador-barra {
+    background: linear-gradient(90deg, #d84315, #f57c00, #ff9800, #ffca28) !important;
+    color: #0a0b0e !important;
+    font-weight: 800 !important;
+}
+body.theme-industrial #grafico-sensor {
+    background: #ff9800 !important;
+    color: #0a0b0e !important;
+    font-weight: 700 !important;
+    border: 1px solid #ffb300 !important;
+}
+body.theme-industrial #grafico-sensor option {
+    background-color: #14161d !important;
+    color: #ffaa00 !important;
+}
+
+/* Terminal de Atualizações e Logs */
+body.theme-industrial .log-container {
+    background-color: #08090c !important;
+    border: 1px solid rgba(255, 152, 0, 0.4) !important;
+    color: #ffb74d !important;
+    font-family: 'Consolas', 'Courier New', monospace;
+}
+body.theme-industrial #lista-logs {
+    color: #ffb74d !important;
+    text-shadow: 0 0 3px rgba(255, 183, 77, 0.35);
+}
+body.theme-industrial #lista-logs li {
+    border-bottom: 1px solid rgba(255, 152, 0, 0.1);
+    padding: 2px 0;
+}
+
+/* Modais Industriais */
+body.theme-industrial .modal-content {
+    background-color: #14161e !important;
+    color: #f5ede0 !important;
+    border: 2px solid #ff9800 !important;
+    box-shadow: 0 0 30px rgba(255, 152, 0, 0.25) !important;
+}
+body.theme-industrial .modal-header {
+    background-color: #0d0e13 !important;
+    border-bottom: 1px solid rgba(255, 152, 0, 0.35) !important;
+    color: #ffaa00 !important;
+}
+body.theme-industrial .modal-footer {
+    border-top: 1px solid rgba(255, 152, 0, 0.25) !important;
+    background-color: #0d0e13 !important;
+}
+body.theme-industrial #mqtt-modal-ultimo-payload,
+body.theme-industrial #lan-modal-ultimo-payload {
+    color: #ffb74d !important;
+    background-color: #08090c !important;
+    border-color: rgba(255, 152, 0, 0.35) !important;
+}
+
+/* Formulários Industriais */
+body.theme-industrial .form-control,
+body.theme-industrial .form-select {
+    background-color: #0d0e13 !important;
+    border: 1px solid rgba(255, 152, 0, 0.35) !important;
+    color: #f5ede0 !important;
+}
+body.theme-industrial .form-control:focus,
+body.theme-industrial .form-select:focus {
+    border-color: #ff9800 !important;
+    box-shadow: 0 0 0 0.25rem rgba(255, 152, 0, 0.25) !important;
+    color: #ffffff !important;
+}
+body.theme-industrial .form-select option {
+    background-color: #14161e !important;
+    color: #ffaa00 !important;
+}
+body.theme-industrial .form-check-input:checked {
+    background-color: #ff9800 !important;
+    border-color: #ffb300 !important;
+}
+
+/* Abas (Nav Pills) Industriais */
+body.theme-industrial .nav-pills .nav-link {
+    color: #c9baa5 !important;
+    border: 1px solid transparent;
+}
+body.theme-industrial .nav-pills .nav-link:hover {
+    color: #ffaa00 !important;
+    background: rgba(255, 152, 0, 0.12) !important;
+}
+body.theme-industrial .nav-pills .nav-link.active {
+    background: linear-gradient(180deg, #ffa000 0%, #e65100 100%) !important;
+    color: #0a0b0e !important;
+    font-weight: 700 !important;
+    border: 1px solid #ffb300 !important;
+    box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35) !important;
+}
+
+/* Tabelas Industriais */
+body.theme-industrial .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #f5ede0;
+    --bs-table-border-color: rgba(255, 152, 0, 0.22);
+}
+body.theme-industrial .table th {
+    background-color: #0e0f14 !important;
+    color: #ffaa00 !important;
+    border-bottom: 2px solid #ff9800 !important;
+    font-weight: 700;
+}
+body.theme-industrial .table td {
+    border-color: rgba(255, 152, 0, 0.18) !important;
+}
+body.theme-industrial .table-dark {
+    --bs-table-bg: transparent !important;
+}
+body.theme-industrial .table-hover > tbody > tr:hover > * {
+    --bs-table-hover-bg: rgba(255, 152, 0, 0.08) !important;
+    color: #ffca28 !important;
+}
+
+/* Utilitários Industriais */
+body.theme-industrial .input-group-text {
+    background-color: #0d0e13 !important;
+    border-color: rgba(255, 152, 0, 0.35) !important;
+    color: #ffaa00 !important;
+}
+body.theme-industrial code {
+    color: #ffaa00 !important;
+    background-color: #0b0c10 !important;
+    border: 1px solid rgba(255, 152, 0, 0.25) !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+body.theme-industrial hr {
+    border-color: rgba(255, 152, 0, 0.25) !important;
+    opacity: 1;
+}
+body.theme-industrial .dropdown-menu {
+    background-color: #14161e !important;
+    border: 1px solid #ff9800 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+}
+body.theme-industrial .dropdown-item {
+    color: #f5ede0 !important;
+}
+body.theme-industrial .dropdown-item:hover {
+    background-color: rgba(255, 152, 0, 0.15) !important;
+    color: #ffaa00 !important;
+}
+body.theme-industrial .alert-success {
+    background-color: rgba(255, 152, 0, 0.14) !important;
+    border: 1px solid #ff9800 !important;
+    color: #ffe0b2 !important;
+}
+body.theme-industrial .alert-danger {
+    background-color: rgba(198, 40, 40, 0.2) !important;
+    border: 1px solid #c62828 !important;
+    color: #ffcdd2 !important;
+}
+body.theme-industrial .alert-warning {
+    background-color: rgba(230, 81, 0, 0.2) !important;
+    border: 1px solid #e65100 !important;
+    color: #ffe0b2 !important;
+}
+
+
+/* ==========================================================================
+   3. TEMA CLARO (ESTILO MICROSOFT TEAMS / FLUENT UI)
+   Paleta: Fundo Fluent (#f3f2f1), Cartões Brancos (#ffffff), Teams Indigo
+           (#5b5fc7), Texto Neutro Escuro (#242424) e Verde Office (#107c41).
+   ========================================================================== */
+body.theme-claro {
+    background-color: #f3f2f1 !important;
+    color: #242424 !important;
+}
+
+/* Scrollbars Claro */
+body.theme-claro ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+body.theme-claro ::-webkit-scrollbar-track {
+    background: #f3f2f1;
+}
+body.theme-claro ::-webkit-scrollbar-thumb {
+    background: #c8c6c4;
+    border-radius: 4px;
+}
+body.theme-claro ::-webkit-scrollbar-thumb:hover {
+    background: #8a8886;
+}
+
+/* Navbar Teams */
+body.theme-claro .navbar {
+    background-color: #ffffff !important;
+    border-bottom: 2px solid #5b5fc7 !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+}
+body.theme-claro .navbar-brand {
+    color: #5b5fc7 !important;
+    font-weight: 700;
+}
+body.theme-claro .navbar .border-secondary {
+    border-color: #edebe9 !important;
+}
+
+/* Tipografia & Headings Claro */
+body.theme-claro h1, 
+body.theme-claro h2, 
+body.theme-claro h3, 
+body.theme-claro h4, 
+body.theme-claro h5, 
+body.theme-claro h6 {
+    color: #242424;
+}
+
+/* Correção de Classes Hardcoded Dark para o Modo Claro */
+body.theme-claro .text-white,
+body.theme-claro .text-light {
+    color: #242424 !important;
+}
+body.theme-claro .text-muted {
+    color: #605e5c !important;
+}
+body.theme-claro .text-success {
+    color: #107c41 !important;
+}
+body.theme-claro .text-info {
+    color: #5b5fc7 !important;
+}
+body.theme-claro .text-primary {
+    color: #5b5fc7 !important;
+}
+body.theme-claro .text-warning {
+    color: #b15e02 !important;
+}
+body.theme-claro .text-danger {
+    color: #a80000 !important;
+}
+
+/* Cards & Painéis Teams */
+body.theme-claro .card {
+    background-color: #ffffff !important;
+    color: #242424 !important;
+    border: 1px solid #edebe9 !important;
+    border-radius: 6px;
+    box-shadow: 0 1.6px 3.6px rgba(0, 0, 0, 0.08), 0 0.3px 0.9px rgba(0, 0, 0, 0.06) !important;
+}
+body.theme-claro .card-header {
+    background-color: #faf9f8 !important;
+    border-bottom: 1px solid #edebe9 !important;
+    color: #242424 !important;
+    font-weight: 600;
+}
+body.theme-claro .card-body.bg-dark {
+    background-color: #ffffff !important;
+    color: #242424 !important;
+}
+
+/* Substituição de Caixas Hardcoded Escuras */
+body.theme-claro .bg-black,
+body.theme-claro .bg-dark {
+    background-color: #f8f9fa !important;
+    border-color: #edebe9 !important;
+    color: #242424 !important;
+}
+body.theme-claro .border-secondary,
+body.theme-claro .border-secondary-subtle {
+    border-color: #edebe9 !important;
+}
+body.theme-claro .border-success {
+    border-color: #5b5fc7 !important;
+}
+body.theme-claro .border-info {
+    border-color: #7b83eb !important;
+}
+
+/* Botões Teams */
+body.theme-claro .btn-success,
+body.theme-claro .btn-primary {
+    background: #5b5fc7 !important;
+    border-color: #5b5fc7 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    box-shadow: 0 2px 4px rgba(91, 95, 199, 0.3);
+}
+body.theme-claro .btn-success:hover,
+body.theme-claro .btn-primary:hover {
+    background: #4f52b2 !important;
+    border-color: #4f52b2 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 8px rgba(91, 95, 199, 0.4);
+}
+body.theme-claro .btn-outline-success,
+body.theme-claro .btn-outline-primary {
+    color: #5b5fc7 !important;
+    border-color: #5b5fc7 !important;
+    background-color: transparent !important;
+}
+body.theme-claro .btn-outline-success:hover,
+body.theme-claro .btn-outline-primary:hover {
+    background-color: #5b5fc7 !important;
+    color: #ffffff !important;
+}
+body.theme-claro .btn-secondary {
+    background-color: #edebe9 !important;
+    border-color: #d1d1d1 !important;
+    color: #242424 !important;
+    font-weight: 500;
+}
+body.theme-claro .btn-secondary:hover {
+    background-color: #e1dfdd !important;
+    border-color: #8a8886 !important;
+    color: #000000 !important;
+}
+body.theme-claro .btn-outline-secondary {
+    color: #424242 !important;
+    border-color: #d1d1d1 !important;
+    background-color: #ffffff !important;
+}
+body.theme-claro .btn-outline-secondary:hover {
+    background-color: #f5f5f5 !important;
+    color: #242424 !important;
+    border-color: #8a8886 !important;
+}
+body.theme-claro .btn-outline-info {
+    color: #5b5fc7 !important;
+    border-color: #5b5fc7 !important;
+}
+body.theme-claro .btn-outline-info:hover {
+    background-color: #5b5fc7 !important;
+    color: #ffffff !important;
+}
+body.theme-claro .btn-outline-warning {
+    color: #b15e02 !important;
+    border-color: #b15e02 !important;
+}
+body.theme-claro .btn-outline-warning:hover {
+    background-color: #b15e02 !important;
+    color: #ffffff !important;
+}
+
+/* Badges Teams */
+body.theme-claro .badge.bg-success {
+    background-color: #dff6dd !important;
+    color: #107c41 !important;
+    border: 1px solid #107c41 !important;
+    font-weight: 600;
+}
+body.theme-claro .badge.bg-info {
+    background-color: #ebebf8 !important;
+    color: #5b5fc7 !important;
+    border: 1px solid #5b5fc7 !important;
+    font-weight: 600;
+}
+body.theme-claro .badge.bg-secondary {
+    background-color: #edebe9 !important;
+    color: #605e5c !important;
+    border: 1px solid #d1d1d1 !important;
+}
+body.theme-claro .badge.bg-dark {
+    background-color: #f3f2f1 !important;
+    color: #242424 !important;
+    border: 1px solid #d1d1d1 !important;
+}
+body.theme-claro .badge.bg-warning {
+    background-color: #fff4ce !important;
+    color: #795e00 !important;
+    border: 1px solid #795e00 !important;
+    font-weight: 600;
+}
+body.theme-claro .badge.bg-danger {
+    background-color: #fde7e9 !important;
+    color: #a80000 !important;
+    border: 1px solid #d13438 !important;
+    font-weight: 600;
+}
+
+/* Indicador de Nível & Barra de Progresso */
+body.theme-claro .progress {
+    background-color: #edebe9 !important;
+    border: 1px solid #d1d1d1 !important;
+    border-radius: 6px;
+}
+body.theme-claro .progress-bar,
+body.theme-claro #indicador-barra {
+    background: linear-gradient(90deg, #5b5fc7, #7b83eb) !important;
+    color: #ffffff !important;
+    font-weight: bold;
+}
+body.theme-claro #grafico-sensor {
+    background: #5b5fc7 !important;
+    color: #ffffff !important;
+    font-weight: 600;
+    border: none !important;
+}
+body.theme-claro #grafico-sensor option {
+    background-color: #ffffff !important;
+    color: #242424 !important;
+}
+
+/* Terminal & Logs no Tema Claro (Console Escuro Embutido tipo VS Code) */
+body.theme-claro .log-container {
+    background-color: #1f1f23 !important;
+    border: 1px solid #d1d1d1 !important;
+    border-radius: 6px;
+    color: #f3f3f3 !important;
+    font-family: 'Consolas', 'Courier New', monospace;
+}
+body.theme-claro #lista-logs {
+    color: #f3f3f3 !important;
+}
+body.theme-claro #lista-logs li {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 2px 0;
+}
+
+/* Modais Teams */
+body.theme-claro .modal-content {
+    background-color: #ffffff !important;
+    color: #242424 !important;
+    border: 1px solid #d1d1d1 !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15) !important;
+}
+body.theme-claro .modal-header {
+    background-color: #faf9f8 !important;
+    border-bottom: 1px solid #edebe9 !important;
+    color: #242424 !important;
+}
+body.theme-claro .modal-footer {
+    border-top: 1px solid #edebe9 !important;
+    background-color: #faf9f8 !important;
+}
+body.theme-claro #mqtt-modal-ultimo-payload,
+body.theme-claro #lan-modal-ultimo-payload {
+    color: #107c41 !important;
+    background-color: #f3f2f1 !important;
+    border-color: #d1d1d1 !important;
+}
+
+/* Formulários Teams */
+body.theme-claro .form-control,
+body.theme-claro .form-select {
+    background-color: #ffffff !important;
+    border: 1px solid #d1d1d1 !important;
+    color: #242424 !important;
+    border-radius: 4px;
+}
+body.theme-claro .form-control:focus,
+body.theme-claro .form-select:focus {
+    border-color: #5b5fc7 !important;
+    box-shadow: 0 0 0 0.2rem rgba(91, 95, 199, 0.25) !important;
+    color: #242424 !important;
+}
+body.theme-claro .form-select option {
+    background-color: #ffffff !important;
+    color: #242424 !important;
+}
+body.theme-claro .form-check-input:checked {
+    background-color: #5b5fc7 !important;
+    border-color: #5b5fc7 !important;
+}
+
+/* Abas (Nav Pills) Teams */
+body.theme-claro .nav-pills .nav-link {
+    color: #605e5c !important;
+    border-radius: 4px;
+}
+body.theme-claro .nav-pills .nav-link:hover {
+    color: #5b5fc7 !important;
+    background-color: #ebebf8;
+}
+body.theme-claro .nav-pills .nav-link.active {
+    background-color: #5b5fc7 !important;
+    color: #ffffff !important;
+    font-weight: 600 !important;
+    border: 1px solid #5b5fc7 !important;
+    box-shadow: 0 2px 6px rgba(91, 95, 199, 0.35);
+}
+
+/* Tabelas Teams */
+body.theme-claro .table,
+body.theme-claro .table-dark {
+    --bs-table-bg: transparent !important;
+    --bs-table-color: #242424 !important;
+    --bs-table-border-color: #edebe9 !important;
+}
+body.theme-claro .table th {
+    background-color: #f8f9fa !important;
+    color: #242424 !important;
+    border-bottom: 2px solid #5b5fc7 !important;
+    font-weight: 600;
+}
+body.theme-claro .table td {
+    border-color: #edebe9 !important;
+    color: #242424 !important;
+}
+body.theme-claro .table-hover > tbody > tr:hover > * {
+    --bs-table-hover-bg: #f3f2f1 !important;
+    color: #242424 !important;
+}
+
+/* Utilitários Teams */
+body.theme-claro .input-group-text {
+    background-color: #f8f9fa !important;
+    border-color: #d1d1d1 !important;
+    color: #605e5c !important;
+}
+body.theme-claro code {
+    color: #5b5fc7 !important;
+    background-color: #ebebf8 !important;
+    border: 1px solid #d1d1d1 !important;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+body.theme-claro hr {
+    border-color: #edebe9 !important;
+}
+body.theme-claro .dropdown-menu {
+    background-color: #ffffff !important;
+    border: 1px solid #d1d1d1 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+body.theme-claro .dropdown-item {
+    color: #242424 !important;
+}
+body.theme-claro .dropdown-item:hover {
+    background-color: #ebebf8 !important;
+    color: #5b5fc7 !important;
+}
+body.theme-claro .alert-success {
+    background-color: #dff6dd !important;
+    border: 1px solid #107c41 !important;
+    color: #107c41 !important;
+}
+body.theme-claro .alert-danger {
+    background-color: #fde7e9 !important;
+    border: 1px solid #d13438 !important;
+    color: #a80000 !important;
+}
+body.theme-claro .alert-warning {
+    background-color: #fff4ce !important;
+    border: 1px solid #795e00 !important;
+    color: #795e00 !important;
+}
+
+
+/* ==========================================================================
+   4. UTILITÁRIOS GERAIS
+   ========================================================================== */
+.sensor-card h2 {
+    font-size: 2.5rem;
+}
+
+.log-container {
+    max-height: 400px;
+    overflow-y: auto;
+    font-family: monospace;
+    font-size: 0.85rem;
+    padding: 10px;
+}
+
+.hardware-status {
+    font-size: 0.9rem;
+}
+
+.nav-pills .nav-link {
+    color: #999;
+}
+
+body.no-animations * {
+    transition: none !important;
+    animation: none !important;
+}

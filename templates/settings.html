@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3 class="fw-bold"><i class="bi bi-gear-fill"></i> Configurações</h3>
+    <a href="/" class="btn btn-success px-4">&larr; Voltar</a>
+</div>
+
+<div class="card p-3" style="min-height: 500px;">
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-pills justify-content-center mb-4" id="settings-tabs" role="tablist">
+        <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#tab-aparencia" type="button">Aparência</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-dashboard" type="button">Dashboard</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-graficos" type="button">Gráficos</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-comunicacao" type="button">Comunicação</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#tab-sensores" type="button">Sensores</button></li>
+    </ul>
+
+    <form id="form-config" class="px-md-5">
+        <div class="tab-content" id="settings-tabContent">
+            
+            <!-- Aparência -->
+            <div class="tab-pane fade show active" id="tab-aparencia" role="tabpanel">
+                <h5 class="mb-4">Aparência da aplicação</h5>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Tema de cores</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="tema-visual" onchange="salvarConfiguracoes()">
+                        <option value="Moderno" {% if config.aparencia.tema == "Moderno" %}selected{% endif %}>Moderno</option>
+                        <option value="Industrial" {% if config.aparencia.tema == "Industrial" %}selected{% endif %}>Industrial</option>
+                        <option value="Claro" {% if config.aparencia.tema == "Claro" %}selected{% endif %}>Claro</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Escala</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="escala" onchange="salvarConfiguracoes()">
+                        <option value="90%" {% if config.aparencia.escala == "90%" %}selected{% endif %}>90%</option>
+                        <option value="100%" {% if not config.aparencia.escala or config.aparencia.escala == "100%" %}selected{% endif %}>100%</option>
+                        <option value="110%" {% if config.aparencia.escala == "110%" %}selected{% endif %}>110%</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted">Estilo do dashboard</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="estilo-dash" onchange="salvarConfiguracoes()">
+                        <option value="Padrão" {% if not config.aparencia.estilo_dashboard or config.aparencia.estilo_dashboard == "Padrão" %}selected{% endif %}>Padrão</option>
+                        <option value="Compacto" {% if config.aparencia.estilo_dashboard == "Compacto" %}selected{% endif %}>Compacto</option>
+                    </select>
+                </div>
+                <div class="form-check form-switch fs-5 text-success">
+                    <input class="form-check-input" type="checkbox" role="switch" id="animacoes" onchange="salvarConfiguracoes()" {% if config.aparencia.animacoes != False %}checked{% endif %}>
+                    <label class="form-check-label text-white">Ativar animações</label>
+                </div>
+                <small class="text-muted mt-3 d-block">Moderno: escuro e limpo • Industrial: preto, âmbar e laranja • Claro: inspirado no Teams</small>
+            </div>
+
+            <!-- Dashboard -->
+            <div class="tab-pane fade" id="tab-dashboard" role="tabpanel">
+                <h5 class="mb-4">Atualização e exibição</h5>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Intervalo de atualização</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="dash-intervalo" onchange="salvarConfiguracoes()">
+                        <option value="500 ms" {% if config.dashboard.intervalo == "500 ms" %}selected{% endif %}>500 ms</option>
+                        <option value="1000 ms" {% if not config.dashboard.intervalo or config.dashboard.intervalo == "1000 ms" %}selected{% endif %}>1000 ms</option>
+                        <option value="2000 ms" {% if config.dashboard.intervalo == "2000 ms" %}selected{% endif %}>2000 ms</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted">Pontos do gráfico</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="dash-pontos" onchange="salvarConfiguracoes()">
+                        <option value="30" {% if config.dashboard.pontos_grafico == "30" %}selected{% endif %}>30</option>
+                        <option value="60" {% if not config.dashboard.pontos_grafico or config.dashboard.pontos_grafico == "60" %}selected{% endif %}>60</option>
+                        <option value="120" {% if config.dashboard.pontos_grafico == "120" %}selected{% endif %}>120</option>
+                    </select>
+                </div>
+                
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="dash-hardware" {% if config.dashboard.exibir_hardware %}checked{% endif %} onchange="salvarConfiguracoes()">
+                    <label class="form-check-label text-white fs-6">Exibir hardware</label>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="dash-atualizacoes" {% if config.dashboard.exibir_atualizacoes %}checked{% endif %} onchange="salvarConfiguracoes()">
+                    <label class="form-check-label text-white fs-6">Exibir atualizações / logs</label>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="dash-sensores" {% if config.dashboard.exibir_sensores %}checked{% endif %} onchange="salvarConfiguracoes()">
+                    <label class="form-check-label text-white fs-6">Exibir sensores</label>
+                </div>
+            </div>
+
+            <!-- Gráficos -->
+            <div class="tab-pane fade" id="tab-graficos" role="tabpanel">
+                <h5 class="mb-4">Monitoramento gráfico</h5>
+                <div class="mb-4">
+                    <label class="form-label text-muted">Sensor padrão</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="graf-sensor-padrao" onchange="salvarConfiguracoes()">
+                        <option value="Temperatura" {% if not config.graficos.sensor_padrao or config.graficos.sensor_padrao == "Temperatura" %}selected{% endif %}>Temperatura</option>
+                        <option value="Umidade do Solo" {% if config.graficos.sensor_padrao == "Umidade do Solo" %}selected{% endif %}>Umidade do Solo</option>
+                        <option value="Umidade do Ar" {% if config.graficos.sensor_padrao == "Umidade do Ar" %}selected{% endif %}>Umidade do Ar</option>
+                        <option value="Luminosidade" {% if config.graficos.sensor_padrao == "Luminosidade" %}selected{% endif %}>Luminosidade</option>
+                    </select>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="graf-grade" onchange="salvarConfiguracoes()" {% if config.graficos.exibir_grade != False %}checked{% endif %}>
+                    <label class="form-check-label text-white fs-6">Exibir grade</label>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="graf-legenda" onchange="salvarConfiguracoes()" {% if config.graficos.exibir_legenda != False %}checked{% endif %}>
+                    <label class="form-check-label text-white fs-6">Exibir legenda</label>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="graf-auto" onchange="salvarConfiguracoes()" {% if config.graficos.atualizacao_automatica != False %}checked{% endif %}>
+                    <label class="form-check-label text-white fs-6">Atualização automática</label>
+                </div>
+            </div>
+
+            <!-- Comunicação -->
+            <div class="tab-pane fade" id="tab-comunicacao" role="tabpanel">
+                <h5 class="mb-4">ESP32 / USB Serial</h5>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Porta</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="serial-porta" onchange="salvarConfiguracoes()">
+                        <option value="Automática" {% if not config.comunicacao.porta or config.comunicacao.porta == "Automática" %}selected{% endif %}>Automática</option>
+                        <option value="COM1" {% if config.comunicacao.porta == "COM1" %}selected{% endif %}>COM1</option>
+                        <option value="COM2" {% if config.comunicacao.porta == "COM2" %}selected{% endif %}>COM2</option>
+                        <option value="COM3" {% if config.comunicacao.porta == "COM3" %}selected{% endif %}>COM3</option>
+                        <option value="COM4" {% if config.comunicacao.porta == "COM4" %}selected{% endif %}>COM4</option>
+                        <option value="/dev/ttyUSB0" {% if config.comunicacao.porta == "/dev/ttyUSB0" %}selected{% endif %}>/dev/ttyUSB0</option>
+                    </select>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-4">
+                    <input class="form-check-input" type="checkbox" role="switch" id="serial-auto" onchange="salvarConfiguracoes()" {% if config.comunicacao.detectar_esp32 != False %}checked{% endif %}>
+                    <label class="form-check-label text-white fs-6">Detectar ESP32 automaticamente</label>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted">Velocidade serial</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="serial-velocidade" onchange="salvarConfiguracoes()">
+                        <option value="9600" {% if config.comunicacao.velocidade == "9600" %}selected{% endif %}>9600</option>
+                        <option value="115200" {% if config.comunicacao.velocidade == "115200" %}selected{% endif %}>115200</option>
+                    </select>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted">Timeout</label>
+                    <select class="form-select bg-dark text-white border-secondary" id="serial-timeout" onchange="salvarConfiguracoes()">
+                        <option value="0.1 s">0.1 s</option>
+                    </select>
+                </div>
+                
+                <div class="form-check form-switch fs-5 text-success mb-4">
+                    <input class="form-check-input" type="checkbox" role="switch" id="serial-reconexao" {% if config.comunicacao.reconexao_automatica %}checked{% endif %} onchange="salvarConfiguracoes()">
+                    <label class="form-check-label text-white fs-6">Reconexão automática</label>
+                </div>
+            </div>
+
+            <!-- Sensores -->
+            <div class="tab-pane fade" id="tab-sensores" role="tabpanel">
+                <h5 class="mb-4">Quais sensores exibir</h5>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="sens-temp" {% if config.sensores.temperatura %}checked{% endif %} onchange="salvarConfiguracoes()">
+                    <label class="form-check-label text-white fs-6">Temperatura</label>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="sens-umid-s" {% if config.sensores.umidade_solo %}checked{% endif %} onchange="salvarConfiguracoes()">
+                    <label class="form-check-label text-white fs-6">Umidade do Solo</label>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="sens-umid-a" {% if config.sensores.umidade_ar %}checked{% endif %} onchange="salvarConfiguracoes()">
+                    <label class="form-check-label text-white fs-6">Umidade do Ar</label>
+                </div>
+                <div class="form-check form-switch fs-5 text-success mb-2">
+                    <input class="form-check-input" type="checkbox" role="switch" id="sens-luz" {% if config.sensores.luminosidade %}checked{% endif %} onchange="salvarConfiguracoes()">
+                    <label class="form-check-label text-white fs-6">Luminosidade</label>
+                </div>
+            </div>
+            
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function salvarConfiguracoes() {
+    const data = {
+        aparencia: {
+            tema: document.getElementById('tema-visual').value,
+            escala: document.getElementById('escala').value,
+            estilo_dashboard: document.getElementById('estilo-dash').value,
+            animacoes: document.getElementById('animacoes').checked
+        },
+        dashboard: {
+            intervalo: document.getElementById('dash-intervalo').value,
+            pontos_grafico: document.getElementById('dash-pontos').value,
+            exibir_sensores: document.getElementById('dash-sensores').checked,
+            exibir_hardware: document.getElementById('dash-hardware').checked,
+            exibir_atualizacoes: document.getElementById('dash-atualizacoes').checked
+        },
+        graficos: {
+            sensor_padrao: document.getElementById('graf-sensor-padrao').value,
+            exibir_grade: document.getElementById('graf-grade').checked,
+            exibir_legenda: document.getElementById('graf-legenda').checked,
+            atualizacao_automatica: document.getElementById('graf-auto').checked
+        },
+        sensores: {
+            temperatura: document.getElementById('sens-temp').checked,
+            umidade_solo: document.getElementById('sens-umid-s').checked,
+            umidade_ar: document.getElementById('sens-umid-a').checked,
+            luminosidade: document.getElementById('sens-luz').checked
+        },
+        comunicacao: {
+            porta: document.getElementById('serial-porta').value,
+            detectar_esp32: document.getElementById('serial-auto').checked,
+            velocidade: document.getElementById('serial-velocidade').value,
+            timeout: document.getElementById('serial-timeout').value,
+            reconexao_automatica: document.getElementById('serial-reconexao').checked
+        }
+    };
+    
+    fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+}
+</script>
+{% endblock %}

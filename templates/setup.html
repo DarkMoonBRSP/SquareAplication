@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center align-items-center" style="min-height: 70vh;">
+    <div class="col-md-6 col-lg-5">
+        <div class="card p-4 shadow border-success">
+            <div class="text-center mb-4">
+                <span class="badge bg-success mb-2 px-3 py-2 fs-6"><i class="bi bi-shield-lock-fill"></i> Primeiro Acesso</span>
+                <h3 class="fw-bold mt-2"><i class="bi bi-person-fill-gear text-success"></i> Configuração Inicial</h3>
+                <p class="text-muted small">Crie a conta de Administrador (ADM) principal para liberar o acesso ao sistema. Esta etapa ocorre apenas uma vez.</p>
+            </div>
+            
+            {% if erro %}
+            <div class="alert alert-danger py-2 small text-center">{{ erro }}</div>
+            {% endif %}
+
+            <form method="POST" action="/setup">
+                <div class="mb-3">
+                    <label class="form-label text-muted">Nome do Administrador</label>
+                    <input type="text" name="nome" class="form-control bg-dark text-white border-secondary" placeholder="Ex: Administrador do Sistema" required autofocus>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Nome de Usuário (Login)</label>
+                    <input type="text" name="usuario" class="form-control bg-dark text-white border-secondary" placeholder="Ex: admin" required>
+                    <small class="text-muted" style="font-size: 0.75rem;">Este será o usuário usado para entrar na aplicação.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label text-muted">Senha Mestre</label>
+                    <input type="password" name="senha" class="form-control bg-dark text-white border-secondary" placeholder="Digite uma senha segura" required minlength="4">
+                </div>
+                <div class="mb-4">
+                    <label class="form-label text-muted">Confirmar Senha</label>
+                    <input type="password" name="confirmar_senha" class="form-control bg-dark text-white border-secondary" placeholder="Repita a senha" required minlength="4">
+                </div>
+                <button type="submit" class="btn btn-success w-100 fw-bold py-2">
+                    <i class="bi bi-check-circle-fill"></i> Criar Conta ADM e Entrar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="pt-br" data-bs-theme="{{ 'dark' if theme in ('moderno', 'industrial') else 'light' }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> SQUARE </title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="{{ url_for('static', filename='vendor/bootstrap/bootstrap.min.css') }}" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/bootstrap-icons/bootstrap-icons.min.css') }}">
+    <!-- Estilo Customizado -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body class="theme-{{ theme }} {% if config and config.aparencia and config.aparencia.animacoes == False %}no-animations{% endif %}" style="{% if config and config.aparencia and config.aparencia.escala %}zoom: {{ config.aparencia.escala }};{% endif %}">
+    
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4 py-3 border-bottom border-secondary" style="background-color: var(--bs-body-bg);">
+        <div class="container-fluid">
+            <a class="navbar-brand fs-4 fw-bold" href="/pools">
+                <i class="bi bi-cpu text-success"></i> SQUARE <span class="text-success">EXTREME</span> <span class="badge bg-dark border border-secondary text-muted" style="font-size: 0.65rem;">0.2 LAN/VPN</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <div class="d-flex align-items-center gap-2">
+                    {% if session.get('logado') %}
+                        {# DENTRO DA POOL: NÃO MOSTRA A ABA DISPOSITIVOS #}
+                        {% if session.get('pool_ativo') %}
+                            <span class="badge bg-dark border border-success text-success px-3 py-2 fs-6">
+                                <i class="bi bi-hdd-network"></i> {{ session.get('pool_nome') or 'Dispositivo' }}
+                            </span>
+                            <button class="btn btn-secondary" type="button" onclick="abrirModalConexao()" title="Conexão Direta LAN/VPN e MQTT"><i class="bi bi-hdd-network"></i> MQTT / LAN</button>
+                            <a class="btn btn-outline-secondary" href="/pool/dashboard" title="Dashboard"><i class="bi bi-window-sidebar"></i> Dashboard</a>
+                            <a class="btn btn-outline-secondary" href="/pool/database" title="Banco SQL"><i class="bi bi-database"></i> Banco</a>
+                            <a class="btn btn-outline-success" href="/pool/settings" title="Configurações da Pool"><i class="bi bi-gear"></i> Config. Pool</a>
+                            <a class="btn btn-secondary ms-2" href="/pools/sair" title="Voltar para a seleção de dispositivos"><i class="bi bi-arrow-left"></i> Sair do Dispositivo</a>
+                        {% else %}
+                            {# FORA DA POOL: MOSTRA DISPOSITIVOS E CONFIGURAÇÕES DO SITE #}
+                            <a class="btn btn-outline-success" href="/pools"><i class="bi bi-server"></i> Dispositivos</a>
+                            <a class="btn btn-outline-secondary" href="/settings/site"><i class="bi bi-sliders"></i> Config. Site</a>
+                        {% endif %}
+
+                        <div class="border-start border-secondary ps-2 ms-2 d-flex align-items-center gap-2">
+                            <span class="text-muted small"><i class="bi bi-person-circle"></i> {{ session.get('usuario') }}</span>
+                            <a class="btn btn-sm btn-outline-danger" href="/logout" title="Sair"><i class="bi bi-box-arrow-right"></i></a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Socket.IO -->
+    <script src="{{ url_for('static', filename='vendor/socket.io/socket.io.min.js') }}"></script>
+    <!-- Bootstrap 5 JS -->
+    <script src="{{ url_for('static', filename='vendor/bootstrap/bootstrap.bundle.min.js') }}"></script>
+    <!-- Script principal -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block scripts %}{% endblock %}
+
+    <!-- Modal Unificado de Conexão: LAN / VPN Direta + Broker MQTT -->
+    <div class="modal fade" id="modalMQTT" tabindex="-1" aria-labelledby="modalMQTTLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 640px;">
+            <div class="modal-content bg-dark text-white border-secondary shadow-lg">
+                <div class="modal-header border-secondary bg-black py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-hdd-network-fill text-success fs-5"></i>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0" id="modalMQTTLabel">Conexão da Pool (LAN / VPN / MQTT)</h5>
+                            <small class="text-muted" id="mqtt-modal-pool-nome">Dispositivo</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-3">
+                    <!-- Abas de Modo de Conexão -->
+                    <ul class="nav nav-pills nav-fill mb-3 gap-2" id="tabs-modal-conexao" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active py-2" id="btn-tab-modal-lan" data-bs-toggle="pill" data-bs-target="#pane-modal-lan" type="button" role="tab">
+                                <i class="bi bi-hdd-network-fill me-1"></i> LAN / VPN Direta <span class="badge bg-success ms-1" style="font-size: 0.65rem;">Sem Broker</span>
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link py-2" id="btn-tab-modal-mqtt" data-bs-toggle="pill" data-bs-target="#pane-modal-mqtt" type="button" role="tab">
+                                <i class="bi bi-broadcast me-1"></i> Broker MQTT
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="content-tabs-modal-conexao">
+                        <!-- ABA 1: LAN / VPN DIRETA (SEM BROKER) -->
+                        <div class="tab-pane fade show active" id="pane-modal-lan" role="tabpanel">
+                            <!-- Status LAN Direta -->
+                            <div class="p-3 rounded border border-secondary mb-3" style="background: rgba(255,255,255,0.03);">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-circle-fill" id="lan-modal-indicator" style="font-size: 0.65rem; color: #6c757d;"></i>
+                                        <div>
+                                            <div class="fw-bold fs-6" id="lan-modal-status-text">Verificando...</div>
+                                            <small class="text-muted" id="lan-modal-detalhes">Consultando modo LAN/VPN da pool</small>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="btn-lan-desligar" onclick="lanDesligar()" title="Desliga o recebimento via LAN Direta (HTTP POST) nesta pool">
+                                            <i class="bi bi-power"></i> Desligar LAN
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-success" id="btn-lan-ativar-modo" onclick="lanAtivarModoDireto()" title="Ativa LAN Direta (HTTP) e desliga o broker MQTT desta pool">
+                                            <i class="bi bi-power"></i> Ativar LAN
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Endereços de Acesso (LAN e VPN) -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <div class="p-2 rounded border border-secondary bg-black h-100">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <span class="small fw-bold text-success"><i class="bi bi-wifi"></i> Acesso na LAN</span>
+                                            <button type="button" class="btn btn-sm btn-outline-info py-0 px-2" style="font-size: 0.7rem;" onclick="carregarStatusLan()" title="Atualizar IPs"><i class="bi bi-arrow-clockwise"></i></button>
+                                        </div>
+                                        <div id="lan-modal-ips-lan" class="d-flex flex-column gap-1 small text-muted">Carregando...</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="p-2 rounded border border-secondary bg-black h-100">
+                                        <span class="small fw-bold text-info d-block mb-1"><i class="bi bi-shield-lock-fill"></i> Acesso via VPN</span>
+                                        <div id="lan-modal-ips-vpn" class="d-flex flex-column gap-1 small text-muted">Verificando...</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Credenciais ESP32 (Endpoint + X-API-Key) -->
+                            <div class="row g-2 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small mb-1">Endpoint POST (ESP32)</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control bg-black text-info border-secondary font-monospace" id="lan-modal-endpoint" readonly>
+                                        <button type="button" class="btn btn-outline-info" onclick="copiarCampoModal('lan-modal-endpoint')" title="Copiar Endpoint"><i class="bi bi-clipboard"></i></button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small mb-1">Token <code>X-API-Key</code></label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" class="form-control bg-black text-warning border-secondary font-monospace" id="lan-modal-token" readonly>
+                                        <button type="button" class="btn btn-outline-warning" onclick="copiarCampoModal('lan-modal-token')" title="Copiar Token"><i class="bi bi-clipboard"></i></button>
+                                        <button type="button" class="btn btn-outline-danger" onclick="lanRegenerarToken()" title="Gerar novo token"><i class="bi bi-arrow-repeat"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Parâmetros de Rede Híbrida -->
+                            <div class="p-2 rounded border border-secondary bg-black mb-3">
+                                <div class="row g-2 align-items-center">
+                                    <div class="col-5">
+                                        <label class="form-label text-muted small mb-1">Modo Padrão (Novas Pools)</label>
+                                        <select class="form-select form-select-sm bg-dark text-white border-secondary" id="lan-modal-modo-padrao">
+                                            <option value="lan_http">LAN Direta HTTP</option>
+                                            <option value="mqtt">Broker MQTT</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-3">
+                                        <label class="form-label text-muted small mb-1">Porta HTTP</label>
+                                        <input type="number" class="form-control form-control-sm bg-dark text-white border-secondary" id="lan-modal-porta" min="1024" max="65535" value="5000">
+                                    </div>
+                                    <div class="col-4 pt-3">
+                                        <div class="form-check form-switch mb-0">
+                                            <input class="form-check-input" type="checkbox" role="switch" id="lan-modal-exigir-token" checked>
+                                            <label class="form-check-label text-light small" for="lan-modal-exigir-token">Exigir Token</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Monitor LAN & Fila de Comandos -->
+                            <div class="border border-secondary rounded p-2 bg-black">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small fw-bold text-muted"><i class="bi bi-reception-4 text-info"></i> Monitor LAN HTTP</span>
+                                    <span class="badge bg-secondary" id="lan-modal-contador-pacotes">0 reqs</span>
+                                </div>
+                                <div class="p-2 rounded bg-dark border border-secondary font-monospace small" id="lan-modal-ultimo-payload" style="max-height: 70px; overflow-y: auto; font-size: 0.74rem; color: #00ff88; word-break: break-all;">
+                                    Aguardando POST em /api/telemetria...
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <small class="text-muted" id="lan-modal-timestamp" style="font-size: 0.7rem;">Último pacote: --</small>
+                                    <button type="button" class="btn btn-sm btn-outline-info py-0 px-2" style="font-size: 0.75rem;" id="btn-lan-testar" onclick="lanEnviarTeste()">
+                                        <i class="bi bi-send-check"></i> Enviar Telemetria de Teste
+                                    </button>
+                                </div>
+                                <hr class="border-secondary my-2">
+                                <div class="row g-1 align-items-center">
+                                    <div class="col-4">
+                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="lan-cmd-acao" placeholder="Ação (ex: bomba)">
+                                    </div>
+                                    <div class="col-3">
+                                        <input type="text" class="form-control form-control-sm bg-dark text-white border-secondary" id="lan-cmd-valor" placeholder="Valor (ex: true)">
+                                    </div>
+                                    <div class="col-3">
+                                        <button type="button" class="btn btn-sm btn-outline-warning w-100" onclick="lanEnfileirarComando()">
+                                            <i class="bi bi-terminal"></i> Enfileirar
+                                        </button>
+                                    </div>
+                                    <div class="col-2 text-end">
+                                        <span class="badge bg-secondary" id="lan-modal-pendentes" title="Comandos aguardando próximo POST do ESP32">0 fila</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ABA 2: BROKER MQTT (TRADICIONAL) -->
+                        <div class="tab-pane fade" id="pane-modal-mqtt" role="tabpanel">
+                            <!-- Status & Diagnóstico -->
+                            <div class="p-3 rounded border border-secondary mb-3" style="background: rgba(255,255,255,0.03);">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-circle-fill" id="mqtt-modal-indicator" style="font-size: 0.65rem; color: #dc3545;"></i>
+                                        <div>
+                                            <div class="fw-bold fs-6" id="mqtt-modal-status-text">Verificando...</div>
+                                            <small class="text-muted" id="mqtt-modal-detalhes">Consultando runtime da pool</small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-info" id="btn-mqtt-testar" onclick="mqttTestarBroker()" title="Verificar conectividade TCP no broker sem alterar estado da pool">
+                                        <i class="bi bi-activity"></i> Testar Broker
+                                    </button>
+                                </div>
+                                <div id="mqtt-modal-teste-resultado" class="mt-2 py-1 px-2 rounded small d-none font-monospace"></div>
+                                <div id="mqtt-modal-erro" class="alert alert-danger py-2 small d-none mt-2 mb-0"></div>
+                            </div>
+
+                            <!-- Campos de Configuração -->
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label class="form-label text-muted small mb-0">Host / IP do Broker</label>
+                                    <span class="small text-muted" style="font-size: 0.72rem;">Preenchimento rápido:</span>
+                                </div>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-black border-secondary text-muted"><i class="bi bi-hdd-network"></i></span>
+                                    <input type="text" class="form-control bg-black text-white border-secondary" id="mqtt-modal-host" placeholder="ex: 192.168.1.100 ou localhost">
+                                </div>
+                                <div class="d-flex gap-1 mt-1 flex-wrap">
+                                    <button type="button" class="badge bg-secondary border-0 py-1 px-2" style="cursor: pointer;" onclick="definirHostMqtt('localhost')">localhost</button>
+                                    <button type="button" class="badge bg-secondary border-0 py-1 px-2" style="cursor: pointer;" onclick="definirHostMqtt('192.168.1.100')">192.168.1.100</button>
+                                    <button type="button" class="badge bg-secondary border-0 py-1 px-2" style="cursor: pointer;" onclick="definirHostMqtt('test.mosquitto.org')">test.mosquitto.org</button>
+                                    <button type="button" class="badge bg-secondary border-0 py-1 px-2" style="cursor: pointer;" onclick="definirHostMqtt('broker.hivemq.com')">hivemq (público)</button>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3 g-2">
+                                <div class="col-4">
+                                    <label class="form-label text-muted small mb-1">Porta</label>
+                                    <input type="number" class="form-control bg-black text-white border-secondary" id="mqtt-modal-porta" placeholder="1883">
+                                </div>
+                                <div class="col-8">
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="form-label text-muted small mb-0">Tópico de Telemetria</label>
+                                        <a href="javascript:void(0)" class="text-success small text-decoration-none" onclick="restaurarTopicoPadrao()" style="font-size: 0.72rem;" title="Restaurar tópico padrão da pool"><i class="bi bi-arrow-counterclockwise"></i> Padrão</a>
+                                    </div>
+                                    <input type="text" class="form-control bg-black text-white border-secondary" id="mqtt-modal-topico" placeholder="estufa/telemetria">
+                                </div>
+                            </div>
+
+                            <div class="row mb-3 g-2">
+                                <div class="col-6">
+                                    <label class="form-label text-muted small mb-1">Usuário (opcional)</label>
+                                    <input type="text" class="form-control bg-black text-white border-secondary" id="mqtt-modal-usuario" placeholder="usuário">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label text-muted small mb-1">Senha (opcional)</label>
+                                    <input type="password" class="form-control bg-black text-white border-secondary" id="mqtt-modal-senha" placeholder="••••••">
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" role="switch" id="mqtt-modal-auto-connect">
+                                <label class="form-check-label text-light small" for="mqtt-modal-auto-connect">Conectar automaticamente ao abrir este dispositivo</label>
+                            </div>
+
+                            <!-- Monitor ao Vivo de Telemetria -->
+                            <div class="border border-secondary rounded p-2 bg-black">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small fw-bold text-muted"><i class="bi bi-reception-4 text-info"></i> Monitor de Pacotes Recebidos</span>
+                                    <span class="badge bg-secondary" id="mqtt-modal-contador-pacotes">0 msgs</span>
+                                </div>
+                                <div class="p-2 rounded bg-dark border border-secondary font-monospace small" id="mqtt-modal-ultimo-payload" style="max-height: 80px; overflow-y: auto; font-size: 0.75rem; color: #00ff88; word-break: break-all;">
+                                    Aguardando telemetria...
+                                </div>
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <small class="text-muted" id="mqtt-modal-timestamp-msg" style="font-size: 0.7rem;">Último pacote: --</small>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2" style="font-size: 0.75rem;" id="btn-mqtt-ping-teste" onclick="mqttPublicarPingTeste()">
+                                        <i class="bi bi-send"></i> Enviar Ping de Teste
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer border-secondary bg-black py-2 d-flex justify-content-between align-items-center">
+                    <span id="lan-modal-save-msg" class="small"></span>
+                    <div id="footer-modal-lan" class="d-flex gap-2 ms-auto">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="button" class="btn btn-success px-4" id="btn-lan-salvar" onclick="lanSalvarConfig()">
+                            <i class="bi bi-check-lg"></i> Salvar Config. LAN/VPN
+                        </button>
+                    </div>
+                    <div id="footer-modal-mqtt" class="d-flex gap-2 ms-auto d-none">
+                        <button type="button" class="btn btn-outline-danger" id="btn-mqtt-desconectar" onclick="mqttDesconectar()">
+                            <i class="bi bi-plug"></i> Desconectar
+                        </button>
+                        <button type="button" class="btn btn-success px-4" id="btn-mqtt-conectar" onclick="mqttConectar()">
+                            <i class="bi bi-cloud-check"></i> Salvar &amp; Conectar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let _topicoPadraoPool = 'estufa/telemetria';
+    let _poolIdAtualModal = null;
+    let _abaForcadaModal = null;
+
+    function definirHostMqtt(host) {
+        document.getElementById('mqtt-modal-host').value = host;
+    }
+
+    function restaurarTopicoPadrao() {
+        document.getElementById('mqtt-modal-topico').value = _topicoPadraoPool;
+    }
+
+    function copiarCampoModal(idCampo) {
+        const el = document.getElementById(idCampo);
+        if (!el || !el.value) return;
+        copiarValorModal(el.value);
+    }
+
+    function copiarValorModal(texto) {
+        if (!texto) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(texto);
+        }
+        const msg = document.getElementById('lan-modal-save-msg');
+        if (msg) {
+            msg.innerHTML = '<span class="text-info"><i class="bi bi-clipboard-check"></i> Copiado!</span>';
+            setTimeout(() => { if (msg.textContent.includes('Copiado')) msg.innerHTML = ''; }, 1800);
+        }
+    }
+
+    function _alternarRodapeModal(abaId) {
+        const fLan = document.getElementById('footer-modal-lan');
+        const fMqtt = document.getElementById('footer-modal-mqtt');
+        const ehMqtt = (abaId === '#pane-modal-mqtt');
+        if (fLan) fLan.classList.toggle('d-none', ehMqtt);
+        if (fMqtt) fMqtt.classList.toggle('d-none', !ehMqtt);
+    }
+
+    function _ativarAbaModal(aba) {
+        const btnId = (aba === 'mqtt') ? 'btn-tab-modal-mqtt' : 'btn-tab-modal-lan';
+        const btn = document.getElementById(btnId);
+        if (btn && window.bootstrap && bootstrap.Tab) {
+            bootstrap.Tab.getOrCreateInstance(btn).show();
+        }
+        _alternarRodapeModal(aba === 'mqtt' ? '#pane-modal-mqtt' : '#pane-modal-lan');
+    }
+
+    function abrirModalConexao(abaAlvo) {
+        _abaForcadaModal = abaAlvo || null;
+        if (_abaForcadaModal) {
+            _ativarAbaModal(_abaForcadaModal);
+        }
+        const modalEl = document.getElementById('modalMQTT');
+        if (modalEl && window.bootstrap && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+    }
+
+    document.querySelectorAll('#tabs-modal-conexao button[data-bs-toggle="pill"]').forEach(btn => {
+        btn.addEventListener('shown.bs.tab', (e) => {
+            _alternarRodapeModal(e.target.getAttribute('data-bs-target'));
+        });
+    });
+
+    // Preenche os campos LAN/VPN e MQTT ao abrir o modal
+    document.getElementById('modalMQTT').addEventListener('show.bs.modal', () => {
+        carregarStatusMqtt();
+        carregarStatusLan();
+    });
+
+    function carregarStatusLan() {
+        fetch('/api/lan/status')
+            .then(r => r.json())
+            .then(data => {
+                if (!data || !data.sucesso) return;
+                _poolIdAtualModal = data.pool_id;
+
+                if (data.pool_nome) {
+                    document.getElementById('mqtt-modal-pool-nome').textContent = data.pool_nome + ' (' + data.pool_id + ')';
+                }
+
+                // Se nenhuma aba específica foi pedida, abre MQTT só se ele estiver conectado; senão LAN
+                if (!_abaForcadaModal) {
+                    _ativarAbaModal(data.mqtt_conectado ? 'mqtt' : 'lan');
+                }
+                _abaForcadaModal = null;
+
+                document.getElementById('lan-modal-endpoint').value = data.url_telemetria || '';
+                document.getElementById('lan-modal-token').value = data.api_token || '';
+
+                if (data.config_rede) {
+                    document.getElementById('lan-modal-modo-padrao').value = data.config_rede.modo_padrao || 'lan_http';
+                    document.getElementById('lan-modal-porta').value = data.config_rede.porta || 5000;
+                    document.getElementById('lan-modal-exigir-token').checked = (data.config_rede.exigir_token_telemetria !== false);
+                }
+
+                // IPs LAN e VPN
+                const lanBox = document.getElementById('lan-modal-ips-lan');
+                if (lanBox && data.rede && data.rede.interfaces_lan) {
+                    lanBox.innerHTML = data.rede.interfaces_lan.length
+                        ? data.rede.interfaces_lan.map(i => `
+                            <div class="d-flex justify-content-between align-items-center bg-dark px-2 py-1 rounded border border-secondary">
+                                <code class="text-success" style="font-size: 0.73rem;">${i.url}</code>
+                                <button type="button" class="btn btn-sm btn-link text-info p-0" onclick="copiarValorModal('${i.url}')" title="${i.interface}"><i class="bi bi-clipboard"></i></button>
+                            </div>`).join('')
+                        : '<span>Apenas localhost disponível.</span>';
+                }
+                const vpnBox = document.getElementById('lan-modal-ips-vpn');
+                if (vpnBox && data.rede) {
+                    const vpns = data.rede.interfaces_vpn || [];
+                    vpnBox.innerHTML = vpns.length
+                        ? vpns.map(i => `
+                            <div class="d-flex justify-content-between align-items-center bg-dark px-2 py-1 rounded border border-info">
+                                <code class="text-info" style="font-size: 0.73rem;">${i.url}</code>
+                                <button type="button" class="btn btn-sm btn-link text-info p-0" onclick="copiarValorModal('${i.url}')" title="${i.interface}"><i class="bi bi-clipboard"></i></button>
+                            </div>`).join('')
+                        : '<span style="font-size: 0.74rem;">Nenhuma VPN ativa. Use <strong>Tailscale</strong> ou <strong>WireGuard</strong> para acesso remoto via <code>100.x.y.z</code>.</span>';
+                }
+
+                // Status visual LAN + botões Ligar / Desligar
+                const ind = document.getElementById('lan-modal-indicator');
+                const txt = document.getElementById('lan-modal-status-text');
+                const det = document.getElementById('lan-modal-detalhes');
+                const btnDesLan = document.getElementById('btn-lan-desligar');
+                const btnAtivLan = document.getElementById('btn-lan-ativar-modo');
+                const btnTestLan = document.getElementById('btn-lan-testar');
+                const lanHabilitada = (data.lan_habilitada !== false);
+
+                if (!lanHabilitada) {
+                    ind.style.color = '#dc3545';
+                    txt.textContent = 'LAN Direta Desligada';
+                    det.textContent = 'Recebimento HTTP POST bloqueado nesta pool';
+                    if (btnDesLan) btnDesLan.classList.add('d-none');
+                    if (btnAtivLan) {
+                        btnAtivLan.classList.remove('d-none');
+                        btnAtivLan.innerHTML = '<i class="bi bi-power"></i> Ativar LAN';
+                    }
+                    if (btnTestLan) btnTestLan.disabled = true;
+                } else {
+                    if (btnDesLan) btnDesLan.classList.remove('d-none');
+                    if (btnAtivLan) {
+                        if (data.mqtt_habilitado) {
+                            btnAtivLan.classList.remove('d-none');
+                            btnAtivLan.innerHTML = '<i class="bi bi-power"></i> Desligar MQTT';
+                        } else {
+                            btnAtivLan.classList.add('d-none');
+                        }
+                    }
+                    if (btnTestLan) btnTestLan.disabled = false;
+
+                    if (data.ativo) {
+                        ind.style.color = '#198754';
+                        txt.textContent = 'Recebendo via LAN Direta (HTTP)';
+                        det.textContent = `Origem: ${data.ultimo_ip || 'LAN'} | MQTT ${data.mqtt_habilitado ? 'também habilitado' : 'desligado'}`;
+                    } else if ((data.total_pacotes || 0) > 0) {
+                        ind.style.color = '#ffc107';
+                        txt.textContent = 'LAN Direta Configurada (Ociosa)';
+                        det.textContent = `Último envio de ${data.ultimo_ip || 'LAN'} às ${data.ultimo_recebido || '--'}`;
+                    } else {
+                        ind.style.color = data.mqtt_habilitado ? '#6c757d' : '#0dcaf0';
+                        txt.textContent = data.mqtt_habilitado ? 'Pronto (Broker MQTT ainda ativo)' : 'Pronto — Modo Sem Broker Ativo';
+                        det.textContent = 'Envie HTTP POST com X-API-Key para iniciar sem broker';
+                    }
+                }
+
+                // Monitor e Fila
+                document.getElementById('lan-modal-contador-pacotes').textContent = (data.total_pacotes || 0) + ' reqs';
+                document.getElementById('lan-modal-pendentes').textContent = (data.pendentes || 0) + ' fila';
+                if (data.ultimo_payload) {
+                    document.getElementById('lan-modal-ultimo-payload').textContent = data.ultimo_payload;
+                    document.getElementById('lan-modal-timestamp').textContent = 'Último pacote: ' + (data.ultimo_recebido || '--') + (data.ultimo_ip ? ' (' + data.ultimo_ip + ')' : '');
+                }
+            })
+            .catch(() => {});
+    }
+
+    function lanAtivarModoDireto() {
+        const msg = document.getElementById('lan-modal-save-msg');
+        fetch('/api/lan/ativar', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                if (d.sucesso) {
+                    if (msg) msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> LAN Direta ativada!</span>';
+                    carregarStatusLan();
+                    carregarStatusMqtt();
+                }
+            });
+    }
+
+    function lanDesligar() {
+        const msg = document.getElementById('lan-modal-save-msg');
+        fetch('/api/lan/desligar', { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                if (d.sucesso) {
+                    if (msg) msg.innerHTML = '<span class="text-warning"><i class="bi bi-power"></i> LAN Direta desligada nesta pool.</span>';
+                    carregarStatusLan();
+                }
+            });
+    }
+
+    function lanRegenerarToken() {
+        if (!_poolIdAtualModal) return;
+        if (!confirm('Regenerar o token invalidará firmwares que usam a chave antiga. Continuar?')) return;
+        fetch(`/api/pool/${_poolIdAtualModal}/lan/regenerar-token`, { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                if (d.sucesso && d.api_token) {
+                    document.getElementById('lan-modal-token').value = d.api_token;
+                    const msg = document.getElementById('lan-modal-save-msg');
+                    if (msg) msg.innerHTML = '<span class="text-warning">Token regenerado!</span>';
+                }
+            });
+    }
+
+    function lanEnviarTeste() {
+        if (!_poolIdAtualModal) return;
+        const btn = document.getElementById('btn-lan-testar');
+        btn.disabled = true;
+        fetch(`/api/pool/${_poolIdAtualModal}/lan/testar`, { method: 'POST' })
+            .then(r => r.json())
+            .then(d => {
+                btn.disabled = false;
+                if (d.sucesso) {
+                    const msg = document.getElementById('lan-modal-save-msg');
+                    if (msg) msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Teste LAN enviado!</span>';
+                    carregarStatusLan();
+                }
+            })
+            .catch(() => { btn.disabled = false; });
+    }
+
+    function lanEnfileirarComando() {
+        if (!_poolIdAtualModal) return;
+        const acao = document.getElementById('lan-cmd-acao').value.trim();
+        const valorRaw = document.getElementById('lan-cmd-valor').value.trim();
+        if (!acao) return;
+        let valor = valorRaw;
+        if (valorRaw === 'true') valor = true;
+        else if (valorRaw === 'false') valor = false;
+        else if (valorRaw !== '' && !isNaN(Number(valorRaw))) valor = Number(valorRaw);
+
+        fetch(`/api/pool/${_poolIdAtualModal}/comando`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ acao, valor })
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.sucesso) {
+                document.getElementById('lan-cmd-acao').value = '';
+                document.getElementById('lan-cmd-valor').value = '';
+                document.getElementById('lan-modal-pendentes').textContent = (d.pendentes || 0) + ' fila';
+                const msg = document.getElementById('lan-modal-save-msg');
+                if (msg) msg.innerHTML = '<span class="text-warning">Comando na fila do próximo POST!</span>';
+            }
+        });
+    }
+
+    function lanSalvarConfig() {
+        const msg = document.getElementById('lan-modal-save-msg');
+        const payload = {
+            rede: {
+                modo_padrao: document.getElementById('lan-modal-modo-padrao').value,
+                porta: parseInt(document.getElementById('lan-modal-porta').value) || 5000,
+                exigir_token_telemetria: document.getElementById('lan-modal-exigir-token').checked
+            }
+        };
+        fetch('/api/config/site', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        })
+        .then(r => r.json())
+        .then(d => {
+            if (d.status === 'ok' && msg) {
+                msg.innerHTML = '<span class="text-success"><i class="bi bi-check-circle-fill"></i> Config. LAN/VPN salva!</span>';
+            }
+        });
+    }
+
+    function carregarStatusMqtt() {
+        fetch('/api/mqtt/status')
+            .then(r => r.json())
+            .then(data => {
+                if (data.pool_nome) {
+                    document.getElementById('mqtt-modal-pool-nome').textContent = data.pool_nome + ' (' + data.pool_id + ')';
+                }
+                _topicoPadraoPool = data.config.topico_padrao || 'estufa/telemetria';
+                document.getElementById('mqtt-modal-host').value = data.config.host || 'localhost';
+                document.getElementById('mqtt-modal-porta').value = data.config.porta || 1883;
+                document.getElementById('mqtt-modal-topico').value = data.config.topico || _topicoPadraoPool;
+                document.getElementById('mqtt-modal-usuario').value = data.config.usuario || '';
+                document.getElementById('mqtt-modal-senha').value = '';
+                document.getElementById('mqtt-modal-auto-connect').checked = !!data.config.conectar_ao_entrar;
+
+                atualizarStatusModal(data.conectado, data.erro, data);
+            })
+            .catch(() => atualizarStatusModal(false, 'Erro ao comunicar com a API da pool.'));
+    }
+
+    function atualizarStatusModal(conectado, erro, dadosExtra) {
+        const ind = document.getElementById('mqtt-modal-indicator');
+        const txt = document.getElementById('mqtt-modal-status-text');
+        const det = document.getElementById('mqtt-modal-detalhes');
+        const btnCon = document.getElementById('btn-mqtt-conectar');
+        const btnDes = document.getElementById('btn-mqtt-desconectar');
+        const errDiv = document.getElementById('mqtt-modal-erro');
+        const btnPing = document.getElementById('btn-mqtt-ping-teste');
+
+        if (conectado) {
+            ind.style.color = '#198754';
+            txt.textContent = 'Conectado ao Broker';
+            const hora = dadosExtra && dadosExtra.conectado_em ? (' desde ' + dadosExtra.conectado_em) : '';
+            det.textContent = 'Broker ativo' + hora + ' | Inscrito em ' + (document.getElementById('mqtt-modal-topico').value);
+            btnCon.disabled = false;
+            btnCon.innerHTML = '<i class="bi bi-arrow-repeat"></i> Atualizar &amp; Reconectar';
+            btnDes.disabled = false;
+            if (btnPing) btnPing.disabled = false;
+        } else {
+            ind.style.color = '#dc3545';
+            txt.textContent = erro ? 'Erro na Conexão' : 'Desconectado';
+            det.textContent = erro ? erro : 'Nenhuma sessão ativa com o broker';
+            btnCon.disabled = false;
+            btnCon.innerHTML = '<i class="bi bi-cloud-check"></i> Salvar &amp; Conectar';
+            btnDes.disabled = true;
+            if (btnPing) btnPing.disabled = true;
+        }
+
+        if (erro && !conectado) {
+            errDiv.textContent = erro;
+            errDiv.classList.remove('d-none');
+        } else {
+            errDiv.classList.add('d-none');
+        }
+
+        // Atualiza monitor de telemetria se fornecido
+        if (dadosExtra) {
+            if (dadosExtra.total_mensagens !== undefined) {
+                document.getElementById('mqtt-modal-contador-pacotes').textContent = dadosExtra.total_mensagens + ' msgs';
+            }
+            if (dadosExtra.ultima_mensagem) {
+                document.getElementById('mqtt-modal-ultimo-payload').textContent = dadosExtra.ultima_mensagem.payload || '';
+                document.getElementById('mqtt-modal-timestamp-msg').textContent = 'Último pacote: ' + (dadosExtra.ultima_mensagem.recebida_em || '--');
+            }
+        }
+    }
+
+    function mqttTestarBroker() {
+        const host = document.getElementById('mqtt-modal-host').value.trim() || 'localhost';
+        const porta = parseInt(document.getElementById('mqtt-modal-porta').value) || 1883;
+        const btn = document.getElementById('btn-mqtt-testar');
+        const resBox = document.getElementById('mqtt-modal-teste-resultado');
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Testando...';
+        resBox.classList.add('d-none');
+
+        fetch('/api/mqtt/testar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ host: host, porta: porta })
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-activity"></i> Testar Broker';
+            resBox.classList.remove('d-none');
+            if (data.sucesso) {
+                resBox.className = 'mt-2 py-1 px-2 rounded small font-monospace bg-success bg-opacity-25 text-success border border-success';
+                resBox.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> ' + data.mensagem;
+            } else {
+                resBox.className = 'mt-2 py-1 px-2 rounded small font-monospace bg-danger bg-opacity-25 text-danger border border-danger';
+                resBox.innerHTML = '<i class="bi bi-x-circle-fill me-1"></i> ' + data.mensagem;
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-activity"></i> Testar Broker';
+            resBox.classList.remove('d-none');
+            resBox.className = 'mt-2 py-1 px-2 rounded small font-monospace bg-danger bg-opacity-25 text-danger border border-danger';
+            resBox.textContent = 'Erro ao realizar teste: ' + err;
+        });
+    }
+
+    function mqttPublicarPingTeste() {
+        const btn = document.getElementById('btn-mqtt-ping-teste');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Enviando...';
+
+        fetch('/api/mqtt/publicar-teste', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({})
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send"></i> Enviar Ping de Teste';
+            if (data.sucesso) {
+                setTimeout(carregarStatusMqtt, 600);
+            } else {
+                alert(data.erro || 'Falha ao enviar ping de teste.');
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send"></i> Enviar Ping de Teste';
+            alert('Erro: ' + err);
+        });
+    }
+
+    function mqttConectar() {
+        const btnCon = document.getElementById('btn-mqtt-conectar');
+        btnCon.disabled = true;
+        btnCon.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Conectando...';
+
+        fetch('/api/mqtt/conectar', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                host: document.getElementById('mqtt-modal-host').value,
+                porta: parseInt(document.getElementById('mqtt-modal-porta').value) || 1883,
+                topico_telemetria: document.getElementById('mqtt-modal-topico').value,
+                usuario: document.getElementById('mqtt-modal-usuario').value,
+                senha: document.getElementById('mqtt-modal-senha').value,
+                conectar_ao_entrar: document.getElementById('mqtt-modal-auto-connect').checked
+            })
+        })
+        .then(r => r.json())
+        .then(data => {
+            btnCon.disabled = false;
+            btnCon.innerHTML = '<i class="bi bi-cloud-check"></i> Salvar &amp; Conectar';
+            carregarStatusMqtt();
+        })
+        .catch(() => {
+            btnCon.disabled = false;
+            btnCon.innerHTML = '<i class="bi bi-cloud-check"></i> Salvar &amp; Conectar';
+            atualizarStatusModal(false, 'Falha na requisição.');
+        });
+    }
+
+    function mqttDesconectar() {
+        const btnDes = document.getElementById('btn-mqtt-desconectar');
+        btnDes.disabled = true;
+        fetch('/api/mqtt/desconectar', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                btnDes.disabled = false;
+                carregarStatusMqtt();
+            })
+            .catch(() => {
+                btnDes.disabled = false;
+            });
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Framework Web e WebSockets em tempo real
+Flask>=3.0.0
+Flask-SocketIO>=5.3.0
+simple-websocket>=1.0.0
+Werkzeug>=3.0.0
+
+# Comunicação IoT (Serial USB e MQTT)
+pyserial>=3.5
+paho-mqtt>=2.0.0
+
+# Banco de Dados (SQLite nativo, MySQL / MariaDB e PostgreSQL)
+SQLAlchemy>=2.0.0
+PyMySQL>=1.1.0
+pg8000>=1.30.0
